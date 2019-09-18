@@ -4,7 +4,7 @@ reg S;
 reg [15:0] A;
 wire [15:0] out;
 
-shift uut (out, A, S);
+shift uut (out, A, S, 1'b0);
 
 initial begin
   A <= 32;
