@@ -1,9 +1,4 @@
-module mux (
-  out,
-  A,
-  B,
-  S
-);
+module mux (out, A, B, S);
 
 output wire [15:0] out;
 input wire [15:0] A, B;

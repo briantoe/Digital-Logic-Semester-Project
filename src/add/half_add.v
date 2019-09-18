@@ -1,4 +1,4 @@
-module half_adder (out, carry, A, B);
+module half_add (out, carry, A, B);
 
 output out, carry;
 input A, B;

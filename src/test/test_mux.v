@@ -15,7 +15,7 @@ initial begin
 end
 
 initial begin
-  $monitor("mutex: %2d, %2d (S = %1b) => %2d", A, B, S, out);
+  $monitor("mux: %2d, %2d (S = %1b) => %2d", A, B, S, out);
 end
 
 endmodule
