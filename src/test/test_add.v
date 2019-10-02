@@ -4,7 +4,7 @@ reg [15:0] A, B;
 wire [15:0] out;
 wire carry, over;
 
-add uut (out, carry, over, A, B, 1'b0);
+add add_test (out, carry, over, A, B, 1'b0);
 
 initial begin
   A <= 25;

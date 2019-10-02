@@ -4,7 +4,7 @@ reg signed [15:0] A, B;
 wire signed [15:0] out;
 wire carry, over;
 
-add uut (out, carry, over, A, B, 1'b1);
+add sub_test (out, carry, over, A, B, 1'b1);
 
 initial begin
   A <= 35;

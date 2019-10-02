@@ -4,7 +4,7 @@ reg S;
 reg [15:0] A, B;
 wire [15:0] out;
 
-mux uut (out, A, B, S);
+mux mux_test (out, A, B, S);
 
 initial begin
   A <= 10;

@@ -30,5 +30,6 @@ shift:
 
 bin:
 	[[ -d ${BIN_DIR} ]] || mkdir ${BIN_DIR}
-clean: 
+
+clean:
 	rm -r ${BIN_DIR}/

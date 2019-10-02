@@ -15,7 +15,7 @@ assign bus_carry[0] = carry_in;
 assign carry_out = bus_carry[16];
 
 xor (overflow, bus_carry[16], bus_carry[15]);
-xor u1 [15:0] (_B[15:0], B[15:0], {16{carry_in}});
-full_add u2 [15:0] (out[15:0], bus_carry[16:1], A[15:0], _B[15:0], bus_carry[15:0]);
+xor invert_B [15:0] (_B[15:0], B[15:0], {16{carry_in}});
+full_add full_adders [15:0] (out[15:0], bus_carry[16:1], A[15:0], _B[15:0], bus_carry[15:0]);
 
 endmodule
