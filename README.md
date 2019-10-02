@@ -54,3 +54,17 @@ add:
     $(call compile, ${ADD_TEST})
 ```
 * Finally, add the rule you defined to the requirements for `all`.
+
+## Language
+
+*DoomScript* is a rough assembly language used to generate text files that can be used to program the verilog ALU.
+
+The Python used to parse the language requires [PLY](https://www.dabeaz.com/ply/ply.html) to run.
+You can install it using `pip`.
+
+To compile your script, use `lang/parse.py`:
+```bash
+$ ./parse.py example.doom
+```
+
+[TODO] Add language syntax.
