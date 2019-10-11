@@ -6,7 +6,7 @@ input wire B;
 
 wire [15:0] partial;
 
-and u1 [15:0] (partial[15:0], A[15:0], {16{B}});
-full_add u2 [15:0] (out[15:0], carries_out[15:0], partial[15:0], {1'b0, prev[15:1]}, carries_in[15:0]);
+and bit_multiply [15:0] (partial[15:0], A[15:0], {16{B}});
+full_add adder [15:0] (out[15:0], carries_out[15:0], partial[15:0], {1'b0, prev[15:1]}, carries_in[15:0]);
 
 endmodule

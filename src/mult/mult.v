@@ -12,10 +12,17 @@ generate
   genvar i;
   for (i = 0; i < 16; i = i + 1) begin
     assign lo[i] = sum[(16 * (i+1))];
-    partial_mult u1 (sum[(16 * (i+1)) +: 16], carries[(16 * (i+1)) +: 16], A[15:0], B[i], sum[(16 * i) +: 16], carries[(16 * i) +: 16]);
+    partial_mult partial_multiply (
+      sum[(16 * (i+1)) +: 16],
+      carries[(16 * (i+1)) +: 16],
+      A[15:0],
+      B[i],
+      sum[(16 * i) +: 16],
+      carries[(16 * i) +: 16]
+    );
   end
 endgenerate
 
-add u2 (.out(hi), .A({1'b0, sum[271:257]}), .B(carries[271:256]), .carry_in(1'b0));
+add hi_output (.out(hi), .A({1'b0, sum[271:257]}), .B(carries[271:256]), .carry_in(1'b0));
 
 endmodule

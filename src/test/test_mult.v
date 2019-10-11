@@ -3,7 +3,7 @@ module test();
 reg [15:0] A, B;
 wire [15:0] hi, lo;
 
-mult uut (hi, lo, A, B);
+mult mult_test (hi, lo, A, B);
 
 initial begin
   A <= 12;
