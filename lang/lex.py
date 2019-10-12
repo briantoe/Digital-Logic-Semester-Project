@@ -15,9 +15,7 @@ tokens = (
     'SHIFTL',
     'SHIFTR',
     'CMP',
-    'LOAD',
     'MOV',
-    'JMP',
     'OR',
     'AND',
     'NOT',
@@ -33,13 +31,11 @@ instruction = {
     'SHIFTL': '0101',
     'SHIFTR': '0110',
     'CMP': '0111',
-    'LOAD': '1000',
-    'MOV': '1001',
-    'JMP': '1010',
-    'OR': '1011',
-    'AND': '1100',
-    'NOT': '1101',
-    'XOR': '1110',
+    'MOV': '1000',
+    'OR': '1001',
+    'AND': '1010',
+    'NOT': '1011',
+    'XOR': '1100',
 }
 
 register = {
@@ -57,7 +53,9 @@ t_ignore = ' \t'
 t_COMMA = r','
 
 def t_error(tok):
-    raise Exception(f'parse error: illegal token `{tok.value}`')
+    tok.value = tok.value.splitlines()[0].partition(' ')[0]
+    print(f'parse error: illegal token: {tok.value}')
+    exit(1)
 
 def t_NEWLINE(tok):
     r'\n+'
@@ -118,18 +116,8 @@ def t_CMP(tok):
     tok.value = instruction[tok.value.upper()]
     return tok
 
-def t_LOAD(tok):
-    r'load'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
 def t_MOV(tok):
     r'mov'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_JMP(tok):
-    r'jmp'
     tok.value = instruction[tok.value.upper()]
     return tok
 

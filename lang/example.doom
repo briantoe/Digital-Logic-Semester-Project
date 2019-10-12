@@ -1,5 +1,6 @@
 mov $0, %ax
 mov $1, %bx
+nop
 add %ax, %bx, %ax
 not %ax, %bx
 and %ax, %bx, %cx
