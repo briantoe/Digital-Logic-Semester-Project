@@ -2,4 +2,4 @@ bin/
 __pycache__
 parser.out
 parsetab.py
-doom.rom
+doom.mem

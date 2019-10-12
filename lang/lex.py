@@ -6,20 +6,23 @@ tokens = (
 
     'REGISTER',
     'IMMEDIATE',
-    'NOP',
+    'LABEL',
+    'REFERENCE',
 
+    'NOP',
     'ADD',
     'SUB',
     'MULT',
     'DIV',
-    'SHIFTL',
-    'SHIFTR',
-    'CMP',
-    'MOV',
     'OR',
     'AND',
     'NOT',
     'XOR',
+    'SHIFTL',
+    'SHIFTR',
+    'CMP',
+    'MOV',
+    'JMP',
 )
 
 instruction = {
@@ -28,24 +31,36 @@ instruction = {
     'SUB': '0010',
     'MULT': '0011',
     'DIV': '0100',
-    'SHIFTL': '0101',
-    'SHIFTR': '0110',
-    'CMP': '0111',
-    'MOV': '1000',
-    'OR': '1001',
-    'AND': '1010',
-    'NOT': '1011',
-    'XOR': '1100',
+    'OR': '0101',
+    'AND': '0110',
+    'NOT': '0111',
+    'XOR': '1000',
+    'SHIFTL': '1001',
+    'SHIFTR': '1010',
+    'CMP': '1011',
+    'MOV': '1100',
+    'JMP': '1101'
+    'LLOAD': '1110', # Load lower byte
+    'ULOAD': '1111', # Load upper byte
 }
 
 register = {
+    '0': '0000',
     'ax': '0001',
     'bx': '0010',
     'cx': '0011',
     'dx': '0100',
     'ac': '0101',
-    'bp': '0110',
-    'pc': '0111',
+    'si': '0110', # Reserved
+    'di': '0111', # Reserved
+    '1': '1000',
+    '2': '1001',
+    '3': '1010',
+    '4': '1011',
+    '5': '1100',
+    '6': '1101',
+    '7': '1110',
+    'pc': '1111',
 }
 
 t_ignore = ' \t'
@@ -63,7 +78,7 @@ def t_NEWLINE(tok):
     return tok
 
 def t_REGISTER(tok):
-    r'%[a-z]+'
+    r'%[a-z0-9]+'
     if not tok.value[1:] in register:
         raise Exception(f'unknown register: {tok.value[1:]}')
     tok.value = register[tok.value[1:]]
@@ -71,9 +86,7 @@ def t_REGISTER(tok):
 
 def t_IMMEDIATE(tok):
     r'\$[0-9]+'
-    if int(tok.value[1:]) > 7:
-        raise Exception(f'immediate out of range (must be a 3 bit value): {tok.value[1:]}')
-    tok.value = '1' + f'{int(tok.value[1:]):03b}'
+    tok.value = int(tok.value[1:])
     return tok
 
 def t_NOP(tok):
@@ -101,6 +114,26 @@ def t_DIV(tok):
     tok.value = instruction[tok.value.upper()]
     return tok
 
+def t_OR(tok):
+    r'or'
+    tok.value = instruction[tok.value.upper()]
+    return tok
+
+def t_AND(tok):
+    r'and'
+    tok.value = instruction[tok.value.upper()]
+    return tok
+
+def t_NOT(tok):
+    r'not'
+    tok.value = instruction[tok.value.upper()]
+    return tok
+
+def t_XOR(tok):
+    r'xor'
+    tok.value = instruction[tok.value.upper()]
+    return tok
+
 def t_SHIFTL(tok):
     r'shiftl'
     tok.value = instruction[tok.value.upper()]
@@ -121,23 +154,8 @@ def t_MOV(tok):
     tok.value = instruction[tok.value.upper()]
     return tok
 
-def t_OR(tok):
-    r'or'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_AND(tok):
-    r'and'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_NOT(tok):
-    r'not'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_XOR(tok):
-    r'xor'
+def t_JMP(tok):
+    r'jmp'
     tok.value = instruction[tok.value.upper()]
     return tok
 

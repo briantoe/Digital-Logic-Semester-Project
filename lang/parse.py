@@ -21,12 +21,15 @@ unary_instructions = (
 
 meta_instructions = ()
 
+line = 0
+labels = {}
+ireg = 'si'
 debug = False
-output = 'doom.rom'
+output = 'doom.mem'
 token = None
 
 def parse_error(sym, msg):
-    print(f'syntax error: {sym}: ' + msg)
+    print(f'syntax error (line {token.lexer.lineno}): {sym}: ' + msg)
     exit(1)
 
 def lex():
@@ -66,7 +69,7 @@ def nop_stmt():
     lex()
     if token.type == 'COMMA':
         parse_error('nop statement', 'unexpected comma')
-    if token.type in ('REGISTER', 'IMMEDIATE'):
+    if arg():
         parse_error('nop statement', 'unexpected arguments')
     output.write(16*'0')
     return True
@@ -74,56 +77,93 @@ def nop_stmt():
 def binary_stmt():
     if not token.type in binary_instructions:
         return False
-    output.write(token.value)
+    ins = token.type
+    ins_code = token.value
+    arg_code = ''
     lex()
     if token.type == 'COMMA':
         parse_error('binary statement', 'unexpected comma')
     for i in range(3):
-        if not token.type in ('REGISTER', 'IMMEDIATE'):
+        if not arg():
             parse_error('binary statement', f'unknown argument: {token.value}')
-        output.write(token.value)
+        arg_code += token.value
         lex()
         if token.type == 'COMMA':
             lex()
-            if i == 2 and token.type in ('REGISTER', 'IMMEDIATE'):
+            if i == 2 and arg():
                 parse_error('unary statement', 'too many arguments')
         elif i != 2:
             parse_error('binary statement', 'insufficient arguments')
+    output.write(ins_code)
+    output.write(arg_code)
+    output.write(' // ' + ins)
     return True
 
 def unary_stmt():
     if not token.type in unary_instructions:
         return False
-    output.write(token.value)
+    ins = token.type
+    ins_code = token.value
+    arg_code = ''
     lex()
     if token.type == 'COMMA':
         parse_error('unary statement', 'unexpected comma')
     for i in range(2):
-        if not token.type in ('REGISTER', 'IMMEDIATE'):
+        if not arg():
             parse_error('unary statement', f'unknown argument: {token.value}')
-        output.write(token.value)
+        arg_code += token.value
         lex()
         if token.type == 'COMMA':
             lex()
-            if i == 1 and token.type in ('REGISTER', 'IMMEDIATE'):
+            if i == 1 and arg():
                 parse_error('unary statement', 'too many arguments')
         elif i != 1:
             parse_error('unary statement', 'insufficient arguments')
+    output.write(ins_code)
+    output.write(arg_code)
     output.write(4*'0')
+    output.write(' // ' + ins)
     return True
 
 def meta_stmt():
     if not token.type in meta_instructions:
         return False
-    output.write(token.value)
+    ins = token.type
+    ins_code = token.value
     lex()
     if token.type == 'COMMA':
         parse_error('meta statement', 'unexpected comma')
-    if not token.type in ('REGISTER', 'IMMEDIATE'):
+    if not arg():
         parse_error('meta statement', 'missing argument')
+    output.write(ins_code)
     output.write(token.value)
     output.write(8*'0')
+    output.write(' // ' + ins)
     lex()
+    return True
+
+def arg():
+    'NOTE: does not call lex()'
+    global ireg
+    if not token.type in ('REGISTER', 'IMMEDIATE'):
+        return False
+    if token.type == 'IMMEDIATE':
+        binary = bin(token.value)[2:]
+        if len(binary) > 16:
+            parse_error('immediate', 'value exceeds 16-bit maximum')
+        upper = (len(binary) > 8)
+        binary = '0'*(16 - len(binary)) + binary
+        output.write(instruction['LLOAD'])
+        output.write(register[ireg])
+        output.write(binary[8:])
+        output.write(' // LLOAD\n')
+        if upper:
+            output.write(instruction['ULOAD'])
+            output.write(register[ireg])
+            output.write(binary[:8])
+            output.write(' // ULOAD\n')
+        token.value = register[ireg]
+        ireg = 'di' if ireg == 'si' else 'si'
     return True
 
 if __name__ == '__main__':
