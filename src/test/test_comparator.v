@@ -6,20 +6,29 @@
 module test();
 
   wire great, equal, less;
-  reg [15:0] a; 
-  reg [15:0] b;
+  reg signed [15:0] a, b; 
+  // reg [15:0] b;
+  // reg [15:0] neg_a, neg_b;
+  reg negative_sig;
   
-  comparator_16b comparator_test(great, equal, less, a, b);
+  comparator_16b comparator_test(great, equal, less, a, b, negative_sig);
   
   initial begin
     a <= 60000;
     b <= 60000;
+    negative_sig <= 0;
     #10
     a <= 5000;
     b <= 4001;
+    negative_sig <= 0;
     #10
-    a <= 2;
+    a <= 3;
     b <= 4;
+    negative_sig <= 0;
+    #10
+    a <= 32767;
+    b <= -32768;
+    negative_sig <= 1;
   end
 
   initial begin
