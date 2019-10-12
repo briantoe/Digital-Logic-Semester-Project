@@ -8,9 +8,11 @@ TEST_DIR=${SRC_DIR}/test
 
 LIB_DIRS += ${SRC_DIR}/comparator
 LIB_DIRS += ${SRC_DIR}/add
+LIB_DIRS += ${SRC_DIR}/mult
 
 ADD_TEST=${TEST_DIR}/test_add.v
 SUB_TEST=${TEST_DIR}/test_sub.v
+MULT_TEST=${TEST_DIR}/test_mult.v
 MUX_TEST=${TEST_DIR}/test_mux.v
 SHIFT_TEST=${TEST_DIR}/test_shift.v
 COMP_TEST=${TEST_DIR}/test_comparator.v
