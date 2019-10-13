@@ -10,10 +10,12 @@ LIB_DIRS += ${SRC_DIR}/cmp
 LIB_DIRS += ${SRC_DIR}/add
 LIB_DIRS += ${SRC_DIR}/mult
 LIB_DIRS += ${SRC_DIR}/mux
+LIB_DIRS += ${SRC_DIR}/dec
 
 ADD_TEST=${TEST_DIR}/test_add.v
 SUB_TEST=${TEST_DIR}/test_sub.v
 MULT_TEST=${TEST_DIR}/test_mult.v
+DEC_TEST=${TEST_DIR}/test_dec.v
 MUX_TEST=${TEST_DIR}/test_mux.v
 SHIFT_TEST=${TEST_DIR}/test_shift.v
 CMP_TEST=${TEST_DIR}/test_cmp.v
@@ -22,7 +24,7 @@ define compile
   ${VERILOG} $(addprefix -y, ${LIB_DIRS}) -o ${BIN_DIR}/$(notdir $(basename $1))$1
 endef
 
-all: bin add mux shift cmp mult
+all: bin add mult mux shift cmp dec
 
 add:
 	$(call compile, ${ADD_TEST})
@@ -30,6 +32,9 @@ add:
 
 mult:
 	$(call compile, ${MULT_TEST})
+
+dec:
+	$(call compile, ${DEC_TEST})
 
 mux:
 	$(call compile, ${MUX_TEST})
