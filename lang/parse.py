@@ -113,7 +113,7 @@ def binary_stmt():
         if token.type == 'COMMA':
             lex()
             if i == 2 and arg():
-                parse_error('unary statement', 'too many arguments')
+                parse_error('binary statement', 'too many arguments')
         elif i != 2:
             parse_error('binary statement', 'insufficient arguments')
     output.write(ins_code)
