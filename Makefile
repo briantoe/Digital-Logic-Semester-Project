@@ -6,7 +6,7 @@ SRC_DIR=src
 LIB_DIRS=${SRC_DIR}
 TEST_DIR=${SRC_DIR}/test
 
-LIB_DIRS += ${SRC_DIR}/comparator
+LIB_DIRS += ${SRC_DIR}/cmp
 LIB_DIRS += ${SRC_DIR}/add
 LIB_DIRS += ${SRC_DIR}/mult
 LIB_DIRS += ${SRC_DIR}/mux
@@ -16,13 +16,13 @@ SUB_TEST=${TEST_DIR}/test_sub.v
 MULT_TEST=${TEST_DIR}/test_mult.v
 MUX_TEST=${TEST_DIR}/test_mux.v
 SHIFT_TEST=${TEST_DIR}/test_shift.v
-COMP_TEST=${TEST_DIR}/test_comparator.v
+CMP_TEST=${TEST_DIR}/test_cmp.v
 
 define compile
   ${VERILOG} $(addprefix -y, ${LIB_DIRS}) -o ${BIN_DIR}/$(notdir $(basename $1))$1
 endef
 
-all: bin add mux shift comp mult
+all: bin add mux shift cmp mult
 
 add:
 	$(call compile, ${ADD_TEST})
@@ -37,8 +37,8 @@ mux:
 shift:
 	$(call compile, ${SHIFT_TEST})
 
-comp:
-	$(call compile, ${COMP_TEST})
+cmp:
+	$(call compile, ${CMP_TEST})
 
 bin:
 	[[ -d ${BIN_DIR} ]] || mkdir ${BIN_DIR}
