@@ -1,0 +1,9 @@
+L0:
+  mov %ax, $0
+  load %bx, %ax
+  add %bx, %bx, $5
+  save %ax, %bx
+  prnt %bx
+  add %ax, %ax, $1
+  xor %cx, %ax, $511
+  jnz .L0, %cx
