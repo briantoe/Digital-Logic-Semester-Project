@@ -22,7 +22,7 @@ tokens = (
     'SHIFTR',
     'CMP',
     'MOV',
-    'JMP',
+    'JNE',
 )
 
 instruction = {
@@ -39,7 +39,7 @@ instruction = {
     'SHIFTR': '1010',
     'CMP': '1011',
     'MOV': '1100',
-    'JMP': '1101'
+    'JNE': '1101',
     'LLOAD': '1110', # Load lower byte
     'ULOAD': '1111', # Load upper byte
 }
@@ -80,13 +80,24 @@ def t_NEWLINE(tok):
 def t_REGISTER(tok):
     r'%[a-z0-9]+'
     if not tok.value[1:] in register:
-        raise Exception(f'unknown register: {tok.value[1:]}')
+        print(f'parse error: unknown register: {tok.value[1:]}')
+        exit(1)
     tok.value = register[tok.value[1:]]
     return tok
 
 def t_IMMEDIATE(tok):
     r'\$[0-9]+'
     tok.value = int(tok.value[1:])
+    return tok
+
+def t_LABEL(tok):
+    r'[a-zA-Z][a-zA-Z0-9]*:'
+    tok.value = tok.value[:-1]
+    return tok
+
+def t_REFERENCE(tok):
+    r'\.[a-zA-Z][a-zA-Z0-9]*'
+    tok.value = tok.value[1:]
     return tok
 
 def t_NOP(tok):
@@ -154,8 +165,8 @@ def t_MOV(tok):
     tok.value = instruction[tok.value.upper()]
     return tok
 
-def t_JMP(tok):
-    r'jmp'
+def t_JNE(tok):
+    r'jne'
     tok.value = instruction[tok.value.upper()]
     return tok
 

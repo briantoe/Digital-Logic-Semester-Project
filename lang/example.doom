@@ -1,6 +1,5 @@
-mov %ax, $0
-mov %bx, $1
-add %ax, %bx, %ax
-add %dx, $1000, $123
-not %cx, %ax
-and %bx, %ax, %cx
+  mov %cx, $65535
+L0:
+  mov %ax, $1
+  add %bx, %ax, %ax
+  jne .L0, %0, %ax

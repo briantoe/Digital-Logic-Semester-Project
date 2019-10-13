@@ -10,6 +10,7 @@ binary_instructions = (
     'OR',
     'AND',
     'XOR',
+    'JNE',
 )
 
 unary_instructions = (
@@ -21,7 +22,13 @@ unary_instructions = (
 
 meta_instructions = ()
 
-line = 0
+arg_types = (
+    'REGISTER',
+    'IMMEDIATE',
+    'REFERENCE',
+)
+
+pc = 0
 labels = {}
 ireg = 'si'
 debug = False
@@ -39,12 +46,26 @@ def lex():
     token = lexer.token()
 
 def document():
+    global pc
     if not token:
         return False
     if token.type == 'NEWLINE':
         lex()
     while token:
+        while label():
+            pass
         stmt()
+        pc += 1
+    return True
+
+def label():
+    if token.type != 'LABEL':
+        return False
+    labels.update({token.value: pc})
+    lex()
+    if token.type != 'NEWLINE':
+        parse_error('label', 'expected a newline')
+    lex()
     return True
 
 def stmt():
@@ -56,7 +77,7 @@ def stmt():
         or unary_stmt()
         or meta_stmt()
     ):
-        parse_error('statement', f'unknown instruction: {token.value}')
+        parse_error('statement', f'unknown instruction `{token.value}`')
     if token.type != 'NEWLINE':
         parse_error('statement', 'malformed statement. expected a newline')
     output.write('\n')
@@ -85,7 +106,7 @@ def binary_stmt():
         parse_error('binary statement', 'unexpected comma')
     for i in range(3):
         if not arg():
-            parse_error('binary statement', f'unknown argument: {token.value}')
+            parse_error('binary statement', f'unknown argument `{token.value}`')
         arg_code += token.value
         lex()
         if token.type == 'COMMA':
@@ -110,7 +131,7 @@ def unary_stmt():
         parse_error('unary statement', 'unexpected comma')
     for i in range(2):
         if not arg():
-            parse_error('unary statement', f'unknown argument: {token.value}')
+            parse_error('unary statement', f'unknown argument `{token.value}`')
         arg_code += token.value
         lex()
         if token.type == 'COMMA':
@@ -145,33 +166,45 @@ def meta_stmt():
 def arg():
     'NOTE: does not call lex()'
     global ireg
-    if not token.type in ('REGISTER', 'IMMEDIATE'):
+    if not token.type in arg_types:
         return False
     if token.type == 'IMMEDIATE':
-        binary = bin(token.value)[2:]
-        if len(binary) > 16:
-            parse_error('immediate', 'value exceeds 16-bit maximum')
-        upper = (len(binary) > 8)
-        binary = '0'*(16 - len(binary)) + binary
-        output.write(instruction['LLOAD'])
-        output.write(register[ireg])
-        output.write(binary[8:])
-        output.write(' // LLOAD\n')
-        if upper:
-            output.write(instruction['ULOAD'])
-            output.write(register[ireg])
-            output.write(binary[:8])
-            output.write(' // ULOAD\n')
+        load_value(ireg, token.value)
         token.value = register[ireg]
         ireg = 'di' if ireg == 'si' else 'si'
+    elif token.type == 'REFERENCE':
+        if not token.value in labels:
+            parse_error('argument', f'unknown label `{token.value}`')
+        load_value('pc', labels[token.value])
+        token.value = register['pc']
     return True
+
+def load_value(reg, value):
+    global pc
+    binary = bin(value)[2:]
+    if len(binary) > 16:
+        parse_error('immediate', 'value exceeds 16-bit maximum')
+    upper = (len(binary) > 8)
+    binary = '0'*(16 - len(binary)) + binary
+    output.write(instruction['LLOAD'])
+    output.write(register[reg])
+    output.write(binary[8:])
+    output.write(' // LLOAD\n')
+    pc += 1
+    if upper:
+        output.write(instruction['ULOAD'])
+        output.write(register[reg])
+        output.write(binary[:8])
+        output.write(' // ULOAD\n')
+        pc += 1
 
 if __name__ == '__main__':
     if len(argv) == 1:
+        print(f'{argv[0]}: missing input file')
         exit(1)
-    if '--debug' in argv[1:]:
+    if '--debug' in argv[2:]:
         debug = True
-    if '-o' in argv[1:]:
+    if '-o' in argv[2:]:
         i = argv.index('-o')
         if (i+1) == len(argv):
             print(f'{argv[0]}: missing output filename')
