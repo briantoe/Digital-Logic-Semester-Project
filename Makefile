@@ -11,6 +11,7 @@ SUB_TEST=${TEST_DIR}/test_sub.v
 LIB_DIRS += ${SRC_DIR}/mult
 MULT_TEST=${TEST_DIR}/test_mult.v
 
+LIB_DIRS += ${SRC_DIR}/mux
 MUX_TEST=${TEST_DIR}/test_mux.v
 
 SHIFT_TEST=${TEST_DIR}/test_shift.v
