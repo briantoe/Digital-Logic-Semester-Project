@@ -11,37 +11,37 @@ tokens = (
 
     'NOP',
     'ADD',
-    'SUB',
-    'MULT',
+    'MUL',
     'DIV',
     'OR',
     'AND',
     'NOT',
     'XOR',
-    'SHIFTL',
-    'SHIFTR',
-    'CMP',
-    'MOV',
-    'JNE',
+    'CMP', # Compare
+    'MOV', # Move
+    'JNZ', # Jump if not zero
+    'SAVE',
+    'LOAD',
+    'PRNT', # Print
 )
 
 instruction = {
     'NOP': '0000',
     'ADD': '0001',
-    'SUB': '0010',
-    'MULT': '0011',
-    'DIV': '0100',
-    'OR': '0101',
-    'AND': '0110',
-    'NOT': '0111',
-    'XOR': '1000',
-    'SHIFTL': '1001',
-    'SHIFTR': '1010',
-    'CMP': '1011',
-    'MOV': '1100',
-    'JNE': '1101',
-    'LLOAD': '1110', # Load lower byte
-    'ULOAD': '1111', # Load upper byte
+    'MUL': '0010',
+    'DIV': '0011',
+    'OR': '0100',
+    'AND': '0101',
+    'NOT': '0110',
+    'XOR': '0111',
+    'CMP': '1000',
+    'MOV': '1001',
+    'JNZ': '1010',
+    'SAVE': '1011',
+    'LOAD': '1100',
+    'PRNT': '1101', # Print
+    'LMOV': '1110', # Move immediate into lower byte
+    'UMOV': '1111', # Move immediate into upper byte
 }
 
 register = {
@@ -64,7 +64,6 @@ register = {
 }
 
 t_ignore = ' \t'
-
 t_COMMA = r','
 
 def t_error(tok):
@@ -110,13 +109,8 @@ def t_ADD(tok):
     tok.value = instruction[tok.value.upper()]
     return tok
 
-def t_SUB(tok):
-    r'sub'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_MULT(tok):
-    r'mult'
+def t_MUL(tok):
+    r'mul'
     tok.value = instruction[tok.value.upper()]
     return tok
 
@@ -145,16 +139,6 @@ def t_XOR(tok):
     tok.value = instruction[tok.value.upper()]
     return tok
 
-def t_SHIFTL(tok):
-    r'shiftl'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_SHIFTR(tok):
-    r'shiftr'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
 def t_CMP(tok):
     r'cmp'
     tok.value = instruction[tok.value.upper()]
@@ -165,8 +149,23 @@ def t_MOV(tok):
     tok.value = instruction[tok.value.upper()]
     return tok
 
-def t_JNE(tok):
-    r'jne'
+def t_JNZ(tok):
+    r'jnz'
+    tok.value = instruction[tok.value.upper()]
+    return tok
+
+def t_SAVE(tok):
+    r'save'
+    tok.value = instruction[tok.value.upper()]
+    return tok
+
+def t_LOAD(tok):
+    r'load'
+    tok.value = instruction[tok.value.upper()]
+    return tok
+
+def t_PRNT(tok):
+    r'prnt'
     tok.value = instruction[tok.value.upper()]
     return tok
 

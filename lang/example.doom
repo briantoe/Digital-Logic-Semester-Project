@@ -1,5 +1,9 @@
-  mov %cx, $65535
 L0:
-  mov %ax, $1
-  add %bx, %ax, %ax
-  jne .L0, %0, %ax
+  mov %ax, $0
+  load %bx, %ax
+  add %bx, %bx, $5
+  save %ax, %bx
+  prnt %bx
+  add %ax, %ax, $1
+  xor %cx, %ax, $511
+  jnz .L0, %cx

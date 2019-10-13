@@ -3,24 +3,25 @@ from sys import argv
 
 binary_instructions = (
     'ADD',
-    'SUB',
-    'MULT',
+    'MUL',
     'DIV',
-    'CMP',
     'OR',
     'AND',
     'XOR',
-    'JNE',
+    'CMP',
 )
 
 unary_instructions = (
-    'SHIFTL',
-    'SHIFTR',
     'MOV',
     'NOT',
+    'SAVE',
+    'LOAD',
+    'JNZ',
 )
 
-meta_instructions = ()
+meta_instructions = (
+    'PRNT',
+)
 
 arg_types = (
     'REGISTER',
@@ -186,16 +187,18 @@ def load_value(reg, value):
         parse_error('immediate', 'value exceeds 16-bit maximum')
     upper = (len(binary) > 8)
     binary = '0'*(16 - len(binary)) + binary
-    output.write(instruction['LLOAD'])
+
+    output.write(instruction['LMOV'])
     output.write(register[reg])
     output.write(binary[8:])
-    output.write(' // LLOAD\n')
+    output.write(' // LMOV\n')
     pc += 1
+
     if upper:
-        output.write(instruction['ULOAD'])
+        output.write(instruction['UMOV'])
         output.write(register[reg])
         output.write(binary[:8])
-        output.write(' // ULOAD\n')
+        output.write(' // UMOV\n')
         pc += 1
 
 if __name__ == '__main__':
