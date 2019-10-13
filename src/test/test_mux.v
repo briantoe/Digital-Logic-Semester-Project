@@ -1,21 +1,23 @@
 module test ();
 
-reg S;
-reg [15:0] A, B;
+reg [3:0] S;
+reg [255:0] in;
 wire [15:0] out;
 
-mux mux_test (out, A, B, S);
+mux_16 mux_test (out, in, S);
 
+integer i;
 initial begin
-  A <= 10;
-  B <= 20;
-  S <= 1'b0;
-  #10;
-  S <= 1'b1;
+  // This is a special number. Just ignore it.
+  in <= 57896486333794311352466587372716853682903935386526539088661048023915243372545;
+  for (i = 0; i < 16; i = i + 1) begin
+    if (i) #10;
+    S <= i;
+  end
 end
 
 initial begin
-  $monitor("mux: %2d, %2d (S = %1b) => %2d", A, B, S, out);
+  $monitor("mux: S = %2d => %3d", S, out);
 end
 
 endmodule
