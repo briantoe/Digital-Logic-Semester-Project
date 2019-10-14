@@ -17,31 +17,30 @@ tokens = (
     'AND',
     'NOT',
     'XOR',
-    'CMP', # Compare
-    'MOV', # Move
-    'JNZ', # Jump if not zero
-    'SAVE',
-    'LOAD',
-    'PRNT', # Print
+    'CMP',
+    'MOV',
+    'JNZ',
+    'SYS',
+    'HLT',
 )
 
 instruction = {
     'NOP': '0000',
     'ADD': '0001',
-    'MUL': '0010',
-    'DIV': '0011',
-    'OR': '0100',
-    'AND': '0101',
-    'NOT': '0110',
-    'XOR': '0111',
-    'CMP': '1000',
-    'MOV': '1001',
-    'JNZ': '1010',
-    'SAVE': '1011',
-    'LOAD': '1100',
-    'PRNT': '1101', # Print
-    'LMOV': '1110', # Move immediate into lower byte
-    'UMOV': '1111', # Move immediate into upper byte
+    'SUB': '0010',
+    'MUL': '0011',
+    'DIV': '0100',
+    'OR': '0101',
+    'AND': '0110',
+    'NOT': '0111',
+    'XOR': '1000',
+    'CMP': '1001',
+    'MOV': '1010',
+    'JNZ': '1011',
+    'SYS': '1100',
+    'LMOV': '1101', # Move immediate into lower byte (RESERVED)
+    'UMOV': '1110', # Move immediate into upper byte (RESERVED)
+    'HLT': '1111', # Halt
 }
 
 register = {
@@ -51,19 +50,20 @@ register = {
     'cx': '0011',
     'dx': '0100',
     'ac': '0101',
-    'si': '0110', # Reserved
-    'di': '0111', # Reserved
+    'si': '0110', # (RESERVED)
+    'di': '0111', # (RESERVED)
     '1': '1000',
     '2': '1001',
     '3': '1010',
     '4': '1011',
     '5': '1100',
-    '6': '1101',
-    '7': '1110',
+    'hi': '1101',
+    'lo': '1110',
     'pc': '1111',
 }
 
 t_ignore = ' \t'
+t_ignore_COMMENT = r'\#.*'
 t_COMMA = r','
 
 def t_error(tok):
@@ -79,7 +79,7 @@ def t_NEWLINE(tok):
 def t_REGISTER(tok):
     r'%[a-z0-9]+'
     if not tok.value[1:] in register:
-        print(f'parse error: unknown register: {tok.value[1:]}')
+        print(f'parse error: unknown register: {tok.value}')
         exit(1)
     tok.value = register[tok.value[1:]]
     return tok
@@ -99,74 +99,13 @@ def t_REFERENCE(tok):
     tok.value = tok.value[1:]
     return tok
 
-def t_NOP(tok):
-    r'nop'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_ADD(tok):
-    r'add'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_MUL(tok):
-    r'mul'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_DIV(tok):
-    r'div'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_OR(tok):
-    r'or'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_AND(tok):
-    r'and'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_NOT(tok):
-    r'not'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_XOR(tok):
-    r'xor'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_CMP(tok):
-    r'cmp'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_MOV(tok):
-    r'mov'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_JNZ(tok):
-    r'jnz'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_SAVE(tok):
-    r'save'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_LOAD(tok):
-    r'load'
-    tok.value = instruction[tok.value.upper()]
-    return tok
-
-def t_PRNT(tok):
-    r'prnt'
-    tok.value = instruction[tok.value.upper()]
+def t_INSTRUCTION(tok):
+    r'[a-z]+'
+    tok.type = tok.value.upper()
+    if not tok.type in instruction:
+        print(f'parse error: unknown instruction `{tok.type}`')
+        exit(1)
+    tok.value = instruction[tok.type]
     return tok
 
 lexer = lex()

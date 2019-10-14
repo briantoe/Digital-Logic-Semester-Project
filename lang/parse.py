@@ -14,13 +14,12 @@ binary_instructions = (
 unary_instructions = (
     'MOV',
     'NOT',
-    'SAVE',
-    'LOAD',
     'JNZ',
 )
 
 meta_instructions = (
-    'PRNT',
+    'SYS',
+    'HLT',
 )
 
 arg_types = (
@@ -176,8 +175,9 @@ def arg():
     elif token.type == 'REFERENCE':
         if not token.value in labels:
             parse_error('argument', f'unknown label `{token.value}`')
-        load_value('pc', labels[token.value])
-        token.value = register['pc']
+        load_value(ireg, labels[token.value])
+        token.value = register[ireg]
+        ireg = 'di' if ireg == 'si' else 'si'
     return True
 
 def load_value(reg, value):

@@ -1,9 +1,11 @@
+  mov %2, %0        # Initial address to load from
 L0:
-  mov %ax, $0
-  load %bx, %ax
-  add %bx, %bx, $5
-  save %ax, %bx
-  prnt %bx
-  add %ax, %ax, $1
-  xor %cx, %ax, $511
-  jnz .L0, %cx
+  mov %1, $1        # Load syscall
+  sys %ax           # Load data from address in %2 into %ax
+  add %ax, %ax, $5
+  mov %1, $2        # Save syscall
+  sys %ax           # Save data in %ax into address in %2
+  add %2, %2, $1    # Increment address
+  xor %bx, %2, $511
+  jnz .L0, %bx
+  hlt $0
