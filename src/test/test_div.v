@@ -1,6 +1,7 @@
 module test();
     wire error;
-    reg signed [15:0] A,B, result;
+    reg signed [15:0] A,B;
+    wire [15:0] result;
     reg sign = 1;
 
 
@@ -13,8 +14,8 @@ module test();
         A <= 8;
         B <= 4;
         #10;
-        A <= 10;
-        B <= 0;
+        // A <= 10;
+        // B <= 0;
         #10;
     end
 
