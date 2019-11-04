@@ -20,8 +20,8 @@ tokens = (
     'CMP',
     'MOV',
     'JNZ',
+    'JMP',
     'SYS',
-    'HLT',
 )
 
 instruction = {
@@ -37,10 +37,10 @@ instruction = {
     'CMP': '1001',
     'MOV': '1010',
     'JNZ': '1011',
-    'SYS': '1100',
-    'LMOV': '1101', # Move immediate into lower byte (RESERVED)
-    'UMOV': '1110', # Move immediate into upper byte (RESERVED)
-    'HLT': '1111', # Halt
+    'JMP': '1100',
+    'SYS': '1101',
+    'LMOV': '1110', # Move immediate into lower byte (RESERVED)
+    'UMOV': '1111', # Move immediate into upper byte (RESERVED)
 }
 
 register = {
@@ -50,15 +50,15 @@ register = {
     'cx': '0011',
     'dx': '0100',
     'ac': '0101',
-    'si': '0110', # (RESERVED)
-    'di': '0111', # (RESERVED)
-    '1': '1000',
-    '2': '1001',
-    '3': '1010',
-    '4': '1011',
-    '5': '1100',
-    'hi': '1101',
-    'lo': '1110',
+    'bp': '0110',
+    'hi': '0111',
+    'lo': '1000',
+    '1': '1001',
+    '2': '1010',
+    '3': '1011',
+    '4': '1100',
+    'si': '1101', # RESERVED
+    'di': '1110', # RESERVED
     'pc': '1111',
 }
 

@@ -18,8 +18,8 @@ unary_instructions = (
 )
 
 meta_instructions = (
+    'JMP',
     'SYS',
-    'HLT',
 )
 
 arg_types = (
