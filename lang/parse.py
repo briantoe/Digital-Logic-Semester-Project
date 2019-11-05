@@ -69,7 +69,7 @@ def label():
     else:
         labels.update({name: pc})
     if token.type != 'NEWLINE':
-        parse_error('label', 'expected a newline')
+        parse_error('label', 'malformed label declaration. expected a newline')
     lex()
     return True
 
@@ -82,7 +82,7 @@ def stmt():
         or unary_stmt()
         or meta_stmt()
     ):
-        parse_error('statement', f'unknown instruction `{token.value}`')
+        parse_error('statement', f'instruction `{token.value.lower()}` not implemented')
     if token.type != 'NEWLINE':
         parse_error('statement', 'malformed statement. expected a newline')
     output.write('\n')
@@ -96,7 +96,7 @@ def nop_stmt():
     if token.type == 'COMMA':
         parse_error('nop statement', 'unexpected comma')
     if arg():
-        parse_error('nop statement', 'unexpected arguments')
+        parse_error('nop statement', f'unexpected argument `{token.name}`')
     output.write(16*'0')
     return True
 
@@ -108,18 +108,22 @@ def binary_stmt():
     arg_code = ''
     lex()
     if token.type == 'COMMA':
-        parse_error('binary statement', 'unexpected comma')
+        parse_error(f'binary statement ({ins.lower()})', 'unexpected comma')
     for i in range(3):
         if not arg():
-            parse_error('binary statement', f'unknown argument `{token.value}`')
+            if token.type != 'NEWLINE':
+                parse_error(f'binary statement ({ins.lower()})', f'unknown argument `{token.name}`')
+            else:
+                token.lexer.lineno -= 1
+                parse_error(f'binary statement ({ins.lower()})', 'missing argument')
         arg_code += token.value
         lex()
         if token.type == 'COMMA':
             lex()
             if i == 2 and arg():
-                parse_error('binary statement', 'too many arguments')
+                parse_error(f'binary statement ({ins.lower()})', f'trailing argument `{token.name}`')
         elif i != 2:
-            parse_error('binary statement', 'insufficient arguments')
+            parse_error(f'binary statement ({ins.lower()})', 'malformed argument. expected comma')
     output.write(ins_code)
     output.write(arg_code)
     output.write(' // ' + ins)
@@ -133,18 +137,22 @@ def unary_stmt():
     arg_code = ''
     lex()
     if token.type == 'COMMA':
-        parse_error('unary statement', 'unexpected comma')
+        parse_error(f'unary statement ({ins.lower()})', 'unexpected comma')
     for i in range(2):
         if not arg():
-            parse_error('unary statement', f'unknown argument `{token.value}`')
+            if token.type != 'NEWLINE':
+                parse_error(f'unary statement ({ins.lower()})', f'unknown argument `{token.name}`')
+            else:
+                token.lexer.lineno -= 1
+                parse_error(f'unary statement ({ins.lower()})', 'missing argument')
         arg_code += token.value
         lex()
         if token.type == 'COMMA':
             lex()
             if i == 1 and arg():
-                parse_error('unary statement', 'too many arguments')
+                parse_error(f'unary statement ({ins.lower()})', f'trailing argument `{token.name}`')
         elif i != 1:
-            parse_error('unary statement', 'insufficient arguments')
+            parse_error(f'unary statement ({ins.lower()})', 'malformed argument. expected comma')
     output.write(ins_code)
     output.write(arg_code)
     output.write(4*'0')
@@ -158,14 +166,21 @@ def meta_stmt():
     ins_code = token.value
     lex()
     if token.type == 'COMMA':
-        parse_error('meta statement', 'unexpected comma')
+        parse_error(f'meta statement ({ins.lower()})', 'unexpected comma')
     if not arg():
-        parse_error('meta statement', 'missing argument')
+        parse_error(f'meta statement ({ins.lower()})', 'missing argument')
+    arg_code = token.value
+    lex()
+    if token.type == 'COMMA':
+        lex()
+        if arg():
+            parse_error(f'meta statement ({ins.lower()})', f'trailing argument `{token.name}`')
+        else:
+            parse_error(f'meta statement ({ins.lower()})', 'unexpected comma')
     output.write(ins_code)
-    output.write(token.value)
+    output.write(arg_code)
     output.write(8*'0')
     output.write(' // ' + ins)
-    lex()
     return True
 
 def arg():

@@ -69,11 +69,10 @@ register = {
 
 t_ANY_ignore = ' \t'
 t_ANY_ignore_COMMENT = r'\#.*'
-t_COMMA = r','
 
 def t_ANY_error(tok):
     tok.value = tok.value.splitlines()[0].partition(' ')[0]
-    print(f'parse error: illegal token: {tok.value}')
+    print(f'parse error: illegal token `{tok.value}`')
     exit(1)
 
 def t_ANY_NEWLINE(tok):
@@ -83,16 +82,22 @@ def t_ANY_NEWLINE(tok):
         tok.lexer.begin('INITIAL')
     return tok
 
+def t_COMMA(tok):
+    r','
+    return tok
+
 def t_REGISTER(tok):
     r'%[a-z0-9]+'
+    tok.name = tok.value
     if not tok.value[1:] in register:
-        print(f'parse error: unknown register: {tok.value}')
+        print(f'parse error: unknown register `{tok.value}`')
         exit(1)
     tok.value = register[tok.value[1:]]
     return tok
 
 def t_IMMEDIATE(tok):
     r'\$[0-9]+'
+    tok.name = tok.value
     tok.value = int(tok.value[1:])
     return tok
 
@@ -109,6 +114,7 @@ def t_label_VALUE(tok):
 
 def t_REFERENCE(tok):
     r'\.[a-zA-Z][a-zA-Z0-9]*'
+    tok.name = tok.value
     tok.value = tok.value[1:]
     return tok
 
@@ -116,7 +122,7 @@ def t_INSTRUCTION(tok):
     r'[a-z]+'
     tok.type = tok.value.upper()
     if not tok.type in instruction:
-        print(f'parse error: unknown instruction `{tok.type}`')
+        print(f'parse error: unknown instruction `{tok.value}`')
         exit(1)
     tok.value = instruction[tok.type]
     return tok
