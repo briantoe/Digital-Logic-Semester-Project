@@ -144,6 +144,9 @@ label in order to function. A label is defined by `<identifier>:` on a single
 line and marks that location in the instruction list. References are used for
 jump calls and function calls.
 
+Additionally, if a number is placed following the colon of a label declaration,
+then the label will represent that number rather than the program counter.
+
 ### Instructions
 
 The available instruction set is as follows:
@@ -177,6 +180,7 @@ the `%1` register.
 ### Example
 
 ```
+END: 511
   mov %2, %0        # Initial address to load from
 L0:
   mov %1, $1        # Load syscall
@@ -185,7 +189,7 @@ L0:
   mov %1, $2        # Save syscall
   sys %ax           # Save data in %ax into address in %2
   add %2, %2, $1    # Increment address
-  xor %bx, %2, $511 # Set %bx to zero if %2 == 511
+  xor %bx, %2, .END # Set %bx to zero if %2 == 511
   jnz .L0, %bx
   mov %1, %0        # Halt syscall
   sys %0

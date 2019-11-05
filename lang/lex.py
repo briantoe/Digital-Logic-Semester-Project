@@ -1,5 +1,9 @@
 from ply.lex import lex
 
+states = (
+    ('label', 'exclusive'),
+)
+
 tokens = (
     'NEWLINE',
     'COMMA',
@@ -7,6 +11,7 @@ tokens = (
     'REGISTER',
     'IMMEDIATE',
     'LABEL',
+    'VALUE',
     'REFERENCE',
 
     'NOP',
@@ -62,18 +67,20 @@ register = {
     'pc': '1111',
 }
 
-t_ignore = ' \t'
-t_ignore_COMMENT = r'\#.*'
+t_ANY_ignore = ' \t'
+t_ANY_ignore_COMMENT = r'\#.*'
 t_COMMA = r','
 
-def t_error(tok):
+def t_ANY_error(tok):
     tok.value = tok.value.splitlines()[0].partition(' ')[0]
     print(f'parse error: illegal token: {tok.value}')
     exit(1)
 
-def t_NEWLINE(tok):
+def t_ANY_NEWLINE(tok):
     r'\n+'
     tok.lexer.lineno += len(tok.value)
+    if tok.lexer.lexstate == 'label':
+        tok.lexer.begin('INITIAL')
     return tok
 
 def t_REGISTER(tok):
@@ -92,6 +99,12 @@ def t_IMMEDIATE(tok):
 def t_LABEL(tok):
     r'[a-zA-Z][a-zA-Z0-9]*:'
     tok.value = tok.value[:-1]
+    tok.lexer.begin('label')
+    return tok
+
+def t_label_VALUE(tok):
+    r'[0-9]+'
+    tok.value = int(tok.value)
     return tok
 
 def t_REFERENCE(tok):

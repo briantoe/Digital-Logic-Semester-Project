@@ -61,8 +61,13 @@ def document():
 def label():
     if token.type != 'LABEL':
         return False
-    labels.update({token.value: pc})
+    name = token.value
     lex()
+    if token.type == 'VALUE':
+        labels.update({name: token.value})
+        lex()
+    else:
+        labels.update({name: pc})
     if token.type != 'NEWLINE':
         parse_error('label', 'expected a newline')
     lex()
