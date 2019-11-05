@@ -19,12 +19,13 @@ DEC_TEST=${TEST_DIR}/test_dec.v
 MUX_TEST=${TEST_DIR}/test_mux.v
 SHIFT_TEST=${TEST_DIR}/test_shift.v
 CMP_TEST=${TEST_DIR}/test_cmp.v
+DIV_TEST=${TEST_DIR}/test_div.v
 
 define compile
   ${VERILOG} $(addprefix -y, ${LIB_DIRS}) -o ${BIN_DIR}/$(notdir $(basename $1))$1
 endef
 
-all: bin add mult mux shift cmp dec
+all: bin add mult mux shift cmp dec div
 
 add:
 	$(call compile, ${ADD_TEST})
@@ -44,6 +45,9 @@ shift:
 
 cmp:
 	$(call compile, ${CMP_TEST})
+
+div:
+	$(call compile, ${DIV_TEST})
 
 bin:
 	[[ -d ${BIN_DIR} ]] || mkdir ${BIN_DIR}
