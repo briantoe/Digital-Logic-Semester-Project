@@ -6,6 +6,7 @@ L0:
   mov %1, $2        # Save syscall
   sys %ax           # Save data in %ax into address in %2
   add %2, %2, $1    # Increment address
-  xor %bx, %2, $511
+  xor %bx, %2, $511 # Set %bx to zero if %2 == 511
   jnz .L0, %bx
-  hlt $0
+  mov %1, %0        # Halt syscall
+  sys %0
