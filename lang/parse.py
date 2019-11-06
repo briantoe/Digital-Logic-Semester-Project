@@ -19,6 +19,10 @@ unary_instructions = (
 
 meta_instructions = (
     'JMP',
+)
+
+special_instructions = (
+    'NOP',
     'SYS',
 )
 
@@ -77,10 +81,10 @@ def stmt():
     if not token.type in instruction:
         parse_error('statement', f'expected instruction, got token of type {token.type}')
     if not (
-        nop_stmt()
-        or binary_stmt()
+        binary_stmt()
         or unary_stmt()
         or meta_stmt()
+        or special_stmt()
     ):
         parse_error('statement', f'instruction `{token.value.lower()}` not implemented')
     if token.type != 'NEWLINE':
@@ -89,15 +93,19 @@ def stmt():
     lex()
     return True
 
-def nop_stmt():
-    if token.type != 'NOP':
+def special_stmt():
+    if not token.type in special_instructions:
         return False
+    ins = token.type
+    ins_code = token.value
     lex()
     if token.type == 'COMMA':
-        parse_error('nop statement', 'unexpected comma')
+        parse_error(f'special statement ({ins.lower()})', 'unexpected comma')
     if arg():
-        parse_error('nop statement', f'unexpected argument `{token.name}`')
-    output.write(16*'0')
+        parse_error(f'special statement ({ins.lower()})', f'unexpected argument `{token.name}`')
+    output.write(ins_code)
+    output.write(12*'0')
+    output.write(' // ' + ins)
     return True
 
 def binary_stmt():
@@ -154,8 +162,12 @@ def unary_stmt():
         elif i != 1:
             parse_error(f'unary statement ({ins.lower()})', 'malformed argument. expected comma')
     output.write(ins_code)
-    output.write(arg_code)
-    output.write(4*'0')
+    if ins == 'JNZ':
+        output.write(register['pc'])
+        output.write(arg_code)
+    else:
+        output.write(arg_code)
+        output.write(register['0'])
     output.write(' // ' + ins)
     return True
 
@@ -178,8 +190,13 @@ def meta_stmt():
         else:
             parse_error(f'meta statement ({ins.lower()})', 'unexpected comma')
     output.write(ins_code)
-    output.write(arg_code)
-    output.write(8*'0')
+    if ins == 'JMP':
+        output.write(register['pc'])
+        output.write(arg_code)
+        output.write(register['0'])
+    else:
+        output.write(arg_code)
+        output.write(2*register['0'])
     output.write(' // ' + ins)
     return True
 
