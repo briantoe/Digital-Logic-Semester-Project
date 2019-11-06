@@ -12,10 +12,12 @@ tokens = (
     'IMMEDIATE',
     'LABEL',
     'VALUE',
+    'OFFSET',
     'REFERENCE',
 
     'NOP',
     'ADD',
+    'SUB',
     'MUL',
     'DIV',
     'OR',
@@ -23,10 +25,10 @@ tokens = (
     'NOT',
     'XOR',
     'CMP',
-    'MOV',
+    'JZE',
     'JNZ',
-    'JMP',
-    'SYS',
+    'CALL',
+    'SYSCALL',
 )
 
 instruction = {
@@ -40,12 +42,12 @@ instruction = {
     'NOT': '0111',
     'XOR': '1000',
     'CMP': '1001',
-    'MOV': '1010',
+    'JZE': '1010',
     'JNZ': '1011',
-    'JMP': '1100',
-    'SYS': '1101',
-    'LMOV': '1110', # Move immediate into lower byte (RESERVED)
-    'UMOV': '1111', # Move immediate into upper byte (RESERVED)
+    'CALL': '1100',
+    'SYSCALL': '1101',
+    'MLO': '1110', # Move immediate into lower byte (RESERVED)
+    'MHI': '1111', # Move immediate into upper byte (RESERVED)
 }
 
 register = {
@@ -57,13 +59,13 @@ register = {
     'ac': '0101',
     'bp': '0110',
     'hi': '0111',
-    'lo': '1000',
-    '1': '1001',
-    '2': '1010',
-    '3': '1011',
-    '4': '1100',
-    'si': '1101', # RESERVED
-    'di': '1110', # RESERVED
+    '1': '1000',
+    '2': '1001',
+    '3': '1010',
+    '4': '1011',
+    'ai': '1100', # RESERVED
+    'bi': '1101', # RESERVED
+    'ci': '1110', # RESERVED
     'pc': '1111',
 }
 
@@ -78,7 +80,7 @@ def t_ANY_error(tok):
 def t_ANY_NEWLINE(tok):
     r'\n+'
     tok.lexer.lineno += len(tok.value)
-    if tok.lexer.lexstate == 'label':
+    if tok.lexer.lexstate != 'INITIAL':
         tok.lexer.begin('INITIAL')
     return tok
 
@@ -95,10 +97,18 @@ def t_REGISTER(tok):
     tok.value = register[tok.value[1:]]
     return tok
 
+def t_OFFSET(tok):
+    r'-?[0-9]+\(%[a-z0-9]+\)'
+    tok.offset = int(tok.value[:tok.value.index('(')])
+    tok.value = tok.value[tok.value.index('%'):tok.value.index(')')]
+    return t_REGISTER(tok)
+
 def t_IMMEDIATE(tok):
-    r'\$[0-9]+'
+    r'-?\$[0-9]+'
     tok.name = tok.value
-    tok.value = int(tok.value[1:])
+    tok.value = int(tok.value[tok.value.index('$')+1:])
+    if tok.name[0] == '-':
+        tok.value *= -1
     return tok
 
 def t_LABEL(tok):
@@ -108,7 +118,7 @@ def t_LABEL(tok):
     return tok
 
 def t_label_VALUE(tok):
-    r'[0-9]+'
+    r'-?[0-9]+'
     tok.value = int(tok.value)
     return tok
 

@@ -121,7 +121,6 @@ Registers are denoted by `%` as a prefix. The available registers are
 * `%ac`: Accumulator.
 * `%bp`: Base pointer.
 * `%hi`: Multiplication high-bit output.
-* `%lo`: Multiplication low-bit output.
 * `%0`: Zero constant.
 * `%1`: System call identifier.
 * `%2`: System call argument.
@@ -144,6 +143,8 @@ label in order to function. A label is defined by `<identifier>:` on a single
 line and marks that location in the instruction list. References are used for
 jump calls and function calls.
 
+The label `MAIN` is required to denote the starting point of the program.
+
 Additionally, if a number is placed following the colon of a label declaration,
 then the label will represent that number rather than the program counter.
 
@@ -161,10 +162,10 @@ The available instruction set is as follows:
 * `not`: Logical not.
 * `xor`: Logical xor.
 * `cmp`: Compare two signed numbers (coded by -1, 0, 1).
-* `mov`: Move value into a register.
+* `jze`: Jump if zero.
 * `jnz`: Jump if not zero.
-* `jmp`: Jump.
-* `sys`: System call.
+* `call`: Jump to a label. Setting `%4` to the appropriate return address.
+* `syscall`: System call.
 
 Instructions all take at least one argument. For instructions that take more
 than one, the first argument almost always identifies a destination for the
@@ -180,19 +181,29 @@ the `%1` register.
 ### Example
 
 ```
-END: 511
-  mov %2, %0        # Initial address to load from
+A: 1071
+B: 462
+
+GCD:
+  or %ax, %1, %0
+  or %bx, %2, %0
 L0:
-  mov %1, $1        # Load syscall
-  sys               # Load data from address in %2
-  mov %ax, %3       # Move loaded data into %ax
-  add %ax, %ax, $5
-  mov %1, $2        # Save syscall
-  mov %3, %ax
-  sys               # Save data in %3 into address in %2
-  add %2, %2, $1    # Increment address
-  xor %bx, %2, .END # Set %bx to zero if %2 == 511
-  jnz .L0, %bx
-  mov %1, %0        # Halt syscall
-  sys
+  cmp %cx, %ax, %bx
+  xor %dx, %cx, -$1
+  jnz .L1, %dx
+  or %1, %bx, %0
+  or %2, %ax, %0
+  jze .GCD, %0 # recurse when %ax < %bx
+L1:
+  sub %ax, %ax, %bx
+  jnz .L0, %ax
+  or %3, %bx, %0
+  jze %4, %0 # return %bx if %ax == 0
+
+MAIN:
+  or %1, .A, %0
+  or %2, .B, %0
+  call .GCD
+  or %1, %0, %0
+  syscall # Halt
 ```

@@ -1,15 +1,16 @@
 END: 511
-  mov %2, %0        # Initial address to load from
+MAIN:
+  or %2, %0, %0     # Initial address to load from
 L0:
-  mov %1, $1        # Load syscall
-  sys               # Load data from address in %2
-  mov %ax, %3       # Move loaded data into %ax
+  or %1, $1, %0     # Load syscall
+  syscall           # Load data from address in %2
+  or %ax, %3, %0    # Move loaded data into %ax
   add %ax, %ax, $5
-  mov %1, $2        # Save syscall
-  mov %3, %ax
-  sys               # Save data in %3 into address in %2
+  or %1, $2, %0     # Save syscall
+  or %3, %ax, %0
+  syscall           # Save data in %3 into address in %2
   add %2, %2, $1    # Increment address
   xor %bx, %2, .END # Set %bx to zero if %2 == 511
   jnz .L0, %bx
-  mov %1, %0        # Halt syscall
-  sys
+  or %1, %0, %0     # Halt syscall
+  syscall

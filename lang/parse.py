@@ -3,6 +3,7 @@ from sys import argv
 
 binary_instructions = (
     'ADD',
+    'SUB',
     'MUL',
     'DIV',
     'OR',
@@ -12,35 +13,45 @@ binary_instructions = (
 )
 
 unary_instructions = (
-    'MOV',
     'NOT',
+    'JZE',
     'JNZ',
 )
 
 meta_instructions = (
-    'JMP',
+    'CALL',
 )
 
 special_instructions = (
     'NOP',
-    'SYS',
+    'SYSCALL',
+)
+
+jump_types = (
+    'JZE',
+    'JNZ',
+    'CALL'
 )
 
 arg_types = (
     'REGISTER',
     'IMMEDIATE',
     'REFERENCE',
+    'OFFSET',
 )
 
 pc = 0
 labels = {}
-ireg = 'si'
+pending_references = {}
+ireg = ('ai', 'bi', 'ci')
+ireg_idx = 0
 debug = False
-output = 'doom.mem'
+output_name = 'doom.mem'
+main_found = False
 token = None
 
 def parse_error(sym, msg):
-    print(f'syntax error (line {token.lexer.lineno}): {sym}: ' + msg)
+    print(f'{argv[0]}: syntax error (line {token.lexer.lineno}): {sym}: ' + msg)
     exit(1)
 
 def lex():
@@ -63,6 +74,7 @@ def document():
     return True
 
 def label():
+    global main_found
     if token.type != 'LABEL':
         return False
     name = token.value
@@ -72,6 +84,8 @@ def label():
         lex()
     else:
         labels.update({name: pc})
+        if name == 'MAIN':
+            main_found = True
     if token.type != 'NEWLINE':
         parse_error('label', 'malformed label declaration. expected a newline')
     lex()
@@ -104,7 +118,7 @@ def special_stmt():
     if arg():
         parse_error(f'special statement ({ins.lower()})', f'unexpected argument `{token.name}`')
     output.write(ins_code)
-    output.write(12*'0')
+    output.write(3*register['0'])
     output.write(' // ' + ins)
     return True
 
@@ -162,7 +176,7 @@ def unary_stmt():
         elif i != 1:
             parse_error(f'unary statement ({ins.lower()})', 'malformed argument. expected comma')
     output.write(ins_code)
-    if ins == 'JNZ':
+    if ins in jump_types:
         output.write(register['pc'])
         output.write(arg_code)
     else:
@@ -190,7 +204,7 @@ def meta_stmt():
         else:
             parse_error(f'meta statement ({ins.lower()})', 'unexpected comma')
     output.write(ins_code)
-    if ins == 'JMP':
+    if ins in jump_types:
         output.write(register['pc'])
         output.write(arg_code)
         output.write(register['0'])
@@ -202,40 +216,54 @@ def meta_stmt():
 
 def arg():
     'NOTE: does not call lex()'
-    global ireg
+    global ireg_idx, pc
     if not token.type in arg_types:
         return False
     if token.type == 'IMMEDIATE':
-        load_value(ireg, token.value)
-        token.value = register[ireg]
-        ireg = 'di' if ireg == 'si' else 'si'
+        load_value(ireg[ireg_idx], token.value)
     elif token.type == 'REFERENCE':
         if not token.value in labels:
-            parse_error('argument', f'unknown label `{token.value}`')
-        load_value(ireg, labels[token.value])
-        token.value = register[ireg]
-        ireg = 'di' if ireg == 'si' else 'si'
+            pending_references.update({token.value: (output.tell(), ireg_idx)})
+            for _ in range(2):
+                output.write(instruction['NOP'])
+                output.write(3*register['0'])
+                output.write(' // NOP\n')
+                pc += 1
+        else:
+            load_value(ireg[ireg_idx], labels[token.value])
+    elif token.type == 'OFFSET':
+        load_value(ireg[ireg_idx], token.offset)
+        output.write(instruction['ADD'])
+        output.write(2*register[ireg[ireg_idx]])
+        output.write(token.value)
+        output.write(' // ADD\n')
+        pc += 1
+    if token.type != 'REGISTER':
+        token.value = register[ireg[ireg_idx]]
+        ireg_idx = (ireg_idx + 1) % len(ireg)
     return True
 
 def load_value(reg, value):
     global pc
+    if value < 0:
+        value += 2**16
     binary = bin(value)[2:]
     if len(binary) > 16:
         parse_error('immediate', 'value exceeds 16-bit maximum')
     upper = (len(binary) > 8)
     binary = '0'*(16 - len(binary)) + binary
 
-    output.write(instruction['LMOV'])
+    output.write(instruction['MLO'])
     output.write(register[reg])
     output.write(binary[8:])
-    output.write(' // LMOV\n')
+    output.write(' // MLO\n')
     pc += 1
 
     if upper:
-        output.write(instruction['UMOV'])
+        output.write(instruction['MHI'])
         output.write(register[reg])
         output.write(binary[:8])
-        output.write(' // UMOV\n')
+        output.write(' // MHI\n')
         pc += 1
 
 if __name__ == '__main__':
@@ -249,8 +277,36 @@ if __name__ == '__main__':
         if (i+1) == len(argv):
             print(f'{argv[0]}: missing output filename')
             exit(1)
-        output = argv[i+1]
-    output = open(output, 'w')
-    lexer.input(open(argv[1]).read())
-    lex()
-    document()
+        output_name = argv[i+1]
+
+    with open(output_name, 'w') as output:
+        lexer.input(open(argv[1]).read())
+        lex()
+        pending_references.update({'MAIN': (output.tell(), -1)})
+        for _ in range(2):
+            output.write(instruction['NOP'])
+            output.write(3*register['0'])
+            output.write(' // NOP\n')
+        output.write(instruction['JZE'])
+        output.write(register['pc'])
+        output.write(register[ireg[-1]])
+        output.write(register['0'])
+        output.write(' // JZE\n')
+        pc += 3
+
+        document()
+
+        if not main_found:
+            print(f'{argv[0]}: label MAIN missing')
+            exit(1)
+
+        for label in labels:
+            if label in pending_references:
+                pend = pending_references.pop(label)
+                output.seek(pend[0], 0)
+                load_value(ireg[pend[1]], labels[label])
+
+    if pending_references:
+        label = list(pending_references.keys())[0]
+        print(f'{argv[0]}: undefined label `{label}`')
+        exit(1)

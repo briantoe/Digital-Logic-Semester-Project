@@ -1,0 +1,25 @@
+A: 1071
+B: 462
+
+GCD:
+  or %ax, %1, %0
+  or %bx, %2, %0
+L0:
+  cmp %cx, %ax, %bx
+  xor %dx, %cx, -$1
+  jnz .L1, %dx
+  or %1, %bx, %0
+  or %2, %ax, %0
+  jze .GCD, %0 # recurse when %ax < %bx
+L1:
+  sub %ax, %ax, %bx
+  jnz .L0, %ax
+  or %3, %bx, %0
+  jze %4, %0 # return %bx if %ax == 0
+
+MAIN:
+  or %1, .A, %0
+  or %2, .B, %0
+  call .GCD
+  or %1, %0, %0
+  syscall # Halt
