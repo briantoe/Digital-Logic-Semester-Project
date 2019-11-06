@@ -1,0 +1,1 @@
+module test_counter:	initial begin			endendmodule

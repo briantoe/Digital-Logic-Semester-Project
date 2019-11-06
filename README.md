@@ -12,7 +12,7 @@
 
 * The file name should be the same as the module name.
 
-* Modules that are built from smaller modules should be collected in it's own
+* Modules that are built from smaller modules should be collected in its own
 directory (such as the modules in `/src/add`).
 
 ### Naming
@@ -68,7 +68,7 @@ input in;
 LIB_DIRS += ${SRC_DIR}/<your module directory>
 ```
 
-* The test module needs to be defined as it's own variable:
+* The test module needs to be defined as its own variable:
 
 ```
 ADD_TEST = ${TEST_DIR}/test_add.v
