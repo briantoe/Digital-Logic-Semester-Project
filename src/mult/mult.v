@@ -23,6 +23,6 @@ generate
   end
 endgenerate
 
-add hi_output (.out(hi), .A({1'b0, sum[271:257]}), .B(carries[271:256]), .carry_in(1'b0));
+add hi_output (.out(hi), .A({1'b0, sum[271:257]}), .B(carries[271:256]), .carry_in(1'b0), .sub(1'b0));
 
 endmodule
