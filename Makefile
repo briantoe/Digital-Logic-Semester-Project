@@ -12,7 +12,6 @@ LIB_DIRS += ${SRC_DIR}/mult
 LIB_DIRS += ${SRC_DIR}/mux
 LIB_DIRS += ${SRC_DIR}/dec
 LIB_DIRS += ${SRC_DIR}/dff
-LIB_DIRS += ${SRC_DIR}/counter
 
 ADD_TEST=${TEST_DIR}/test_add.v
 SUB_TEST=${TEST_DIR}/test_sub.v
