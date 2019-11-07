@@ -8,9 +8,9 @@ wire [2:0] flags;
 alu alu_test (out, flags, hi, A, B, ins);
 
 initial begin
-  A <= 511;
-  B <= 3;
-  $display("alu: A = 511, B = 3");
+  A <= 3;
+  B <= 511;
+  $display("alu: A = 3, B = 511");
   ins <= 1;
   #10
   ins <= 2;
@@ -31,7 +31,7 @@ initial begin
 end
 
 initial begin
-  $monitor("alu: ins = %4b => out = %4d, flags = %3b, hi = %4d", ins, out, flags, hi);
+  // $monitor("alu: ins = %4b => out = %4d, flags = %3b, hi = %4d", ins, out, flags, hi);
 end
 
 endmodule

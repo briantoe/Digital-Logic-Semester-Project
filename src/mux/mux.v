@@ -1,15 +1,16 @@
 module mux (out, A, B, sel);
+parameter width = 16;
 
-output wire [15:0] out;
-input wire [15:0] A, B;
+output wire [width-1:0] out;
+input wire [width-1:0] A, B;
 input wire sel;
 
 wire _sel;
-wire [15:0] bus1, bus2;
+wire [width-1:0] bus1, bus2;
 
 not (_sel, sel);
-and and_A [15:0] (bus1[15:0], {16{_sel}}, A[15:0]);
-and and_B [15:0] (bus2[15:0], {16{sel}}, B[15:0]);
-or or_out [15:0] (out[15:0], bus1[15:0], bus2[15:0]);
+and and_A [width-1:0] (bus1, {width{_sel}}, A);
+and and_B [width-1:0] (bus2, {width{sel}}, B);
+or or_out [width-1:0] (out, bus1, bus2);
 
 endmodule
