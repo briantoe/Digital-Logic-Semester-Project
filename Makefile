@@ -1,10 +1,10 @@
 SHELL = /bin/bash
 
-PYTHON = python3
 VERILOG=iverilog
 BIN_DIR=bin
 SRC_DIR=src
 LANG_DIR=lang
+DSCRIPT = ${LANG_DIR}/dscript
 LIB_DIRS=${SRC_DIR}
 TEST_DIR=${SRC_DIR}/test
 
@@ -69,7 +69,7 @@ cpu:
 	$(call compile, ${CPU_TEST})
 
 gcd:
-	${PYTHON} ${LANG_DIR}/parse.py ${LANG_DIR}/gcd.doom -o ${TEST_DIR}/example.mem
+	${DSCRIPT} ${LANG_DIR}/gcd.doom -o ${TEST_DIR}/example.mem
 
 bin:
 	[[ -d ${BIN_DIR} ]] || mkdir ${BIN_DIR}

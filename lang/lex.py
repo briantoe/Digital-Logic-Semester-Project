@@ -12,6 +12,7 @@ tokens = (
     'IMMEDIATE',
     'LABEL',
     'VALUE',
+    'STRING',
     'OFFSET',
     'REFERENCE',
 
@@ -112,7 +113,7 @@ def t_IMMEDIATE(tok):
     return tok
 
 def t_LABEL(tok):
-    r'[a-zA-Z][a-zA-Z0-9]*:'
+    r'[a-zA-Z][a-zA-Z0-9_]*:'
     tok.value = tok.value[:-1]
     tok.lexer.begin('label')
     return tok
@@ -122,8 +123,13 @@ def t_label_VALUE(tok):
     tok.value = int(tok.value)
     return tok
 
+def t_label_STRING(tok):
+    r'".*"'
+    tok.value = tok.value[1:-1]
+    return tok
+
 def t_REFERENCE(tok):
-    r'\.[a-zA-Z][a-zA-Z0-9]*'
+    r'\.[a-zA-Z][a-zA-Z0-9_]*'
     tok.name = tok.value
     tok.value = tok.value[1:]
     return tok

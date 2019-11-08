@@ -1,9 +1,11 @@
-module cpu (pc, clk, ins, clear);
+module cpu (pc, sys_signal, sysregs, clk, ins, clear, load_signal, load_data);
 parameter debug = 0;
 
 output wire [15:0] pc;
-input wire clk, clear;
-input wire [15:0] ins;
+output wire sys_signal;
+output wire [47:0] sysregs;
+input wire clk, clear, load_signal;
+input wire [15:0] ins, load_data;
 
 wire _clear, _clk;
 
@@ -33,9 +35,6 @@ wire jze_null, jnz_null;
 wire zero, _zero;
 wire [15:0] sp_out;
 
-wire sys_signal, load_signal;
-wire [15:0] load_val;
-
 wire [15:0] bus_3, bus_4, pc_inc;
 
 wire mult_signal;
@@ -55,7 +54,7 @@ initial if (debug) begin
   );
 end
 
-assign sysreg = {val_3, val_2, val_1};
+assign sysregs = {val_3, val_2, val_1};
 
 assign op = ins[15:12];
 assign dest = ins[11:8];
@@ -182,7 +181,7 @@ or (null_signal, sys_signal, jze_null, jnz_null);
 
 mux #(4) dest_mux (bus_dest, dest, 4'b0, null_signal);
 mux hi_mux (bus_hi, out, alu_hi, mult_signal);
-mux reg3_mux (bus_3, out, load_val, load_signal);
+mux reg3_mux (bus_3, out, load_data, load_signal);
 mux reg4_mux (bus_4, out, pc_inc, call_signal);
 mux_4 out_mux (out, {32'b0, alu_out, sp_out}, {clear, alu_signal});
 
@@ -200,7 +199,5 @@ mux_8 sp_mux (
   { {ins[7:0], r0[7:0]}, {8'b0, ins[7:0]}, 16'b0, {3{r1}}, 32'b0 },
   op[2:0]
 );
-
-syscall sys_module (load_signal, load_val, sys_signal, {val_3, val_2, val_1});
 
 endmodule

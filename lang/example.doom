@@ -1,6 +1,6 @@
-END: 511
+END: 500
 MAIN:
-  or %2, %0, %0     # Initial address to load from
+  or %2, %bp, %0     # Initial address to load from
 L0:
   or %1, $2, %0     # Load syscall
   syscall           # Load data from address in %2
@@ -9,8 +9,8 @@ L0:
   or %1, $1, %0     # Save syscall
   or %3, %ax, %0
   syscall           # Save data in %3 into address in %2
-  add %2, %2, $1    # Increment address
-  xor %bx, %2, .END # Set %bx to zero if %2 == 511
+  sub %2, %2, $1    # Increment address
+  xor %bx, %2, .END # Set %bx to zero if %2 == 500
   jnz .L0, %bx
   or %1, %0, %0     # Halt syscall
   syscall

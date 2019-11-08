@@ -1,5 +1,8 @@
+#!/bin/python3
+from pathlib import Path
+from collections import defaultdict
 from lex import lexer, instruction, register
-from sys import argv
+from argparse import ArgumentParser
 
 binary_instructions = (
     'ADD',
@@ -42,11 +45,10 @@ arg_types = (
 
 pc = 0
 labels = {}
-pending_references = {}
+data = {}
+pending_references = defaultdict(list)
 ireg = ('ai', 'bi', 'ci')
 ireg_idx = 0
-debug = False
-output_name = 'doom.mem'
 main_found = False
 token = None
 
@@ -56,7 +58,7 @@ def parse_error(sym, msg):
 
 def lex():
     global token
-    if token and debug:
+    if token and args.verbose:
         print(f'{token.type:9}: {token.value}')
     token = lexer.token()
 
@@ -79,8 +81,8 @@ def label():
         return False
     name = token.value
     lex()
-    if token.type == 'VALUE':
-        labels.update({name: token.value})
+    if token.type in ('VALUE', 'STRING'):
+        data.update({name: token.value})
         lex()
     else:
         labels.update({name: pc})
@@ -103,7 +105,7 @@ def stmt():
         parse_error('statement', f'instruction `{token.value.lower()}` not implemented')
     if token.type != 'NEWLINE':
         parse_error('statement', 'malformed statement. expected a newline')
-    output.write('\n')
+    mem.write('\n')
     lex()
     return True
 
@@ -117,9 +119,9 @@ def special_stmt():
         parse_error(f'special statement ({ins.lower()})', 'unexpected comma')
     if arg():
         parse_error(f'special statement ({ins.lower()})', f'unexpected argument `{token.name}`')
-    output.write(ins_code)
-    output.write(3*register['0'])
-    output.write(' // ' + ins)
+    mem.write(ins_code)
+    mem.write(3*register['0'])
+    mem.write(' // ' + ins)
     return True
 
 def binary_stmt():
@@ -146,9 +148,9 @@ def binary_stmt():
                 parse_error(f'binary statement ({ins.lower()})', f'trailing argument `{token.name}`')
         elif i != 2:
             parse_error(f'binary statement ({ins.lower()})', 'malformed argument. expected comma')
-    output.write(ins_code)
-    output.write(arg_code)
-    output.write(' // ' + ins)
+    mem.write(ins_code)
+    mem.write(arg_code)
+    mem.write(' // ' + ins)
     return True
 
 def unary_stmt():
@@ -175,14 +177,14 @@ def unary_stmt():
                 parse_error(f'unary statement ({ins.lower()})', f'trailing argument `{token.name}`')
         elif i != 1:
             parse_error(f'unary statement ({ins.lower()})', 'malformed argument. expected comma')
-    output.write(ins_code)
+    mem.write(ins_code)
     if ins in jump_types:
-        output.write(register['pc'])
-        output.write(arg_code)
+        mem.write(register['pc'])
+        mem.write(arg_code)
     else:
-        output.write(arg_code)
-        output.write(register['0'])
-    output.write(' // ' + ins)
+        mem.write(arg_code)
+        mem.write(register['0'])
+    mem.write(' // ' + ins)
     return True
 
 def meta_stmt():
@@ -203,15 +205,15 @@ def meta_stmt():
             parse_error(f'meta statement ({ins.lower()})', f'trailing argument `{token.name}`')
         else:
             parse_error(f'meta statement ({ins.lower()})', 'unexpected comma')
-    output.write(ins_code)
+    mem.write(ins_code)
     if ins in jump_types:
-        output.write(register['pc'])
-        output.write(arg_code)
-        output.write(register['0'])
+        mem.write(register['pc'])
+        mem.write(arg_code)
+        mem.write(register['0'])
     else:
-        output.write(arg_code)
-        output.write(2*register['0'])
-    output.write(' // ' + ins)
+        mem.write(arg_code)
+        mem.write(2*register['0'])
+    mem.write(' // ' + ins)
     return True
 
 def arg():
@@ -223,76 +225,87 @@ def arg():
         load_value(ireg[ireg_idx], token.value)
     elif token.type == 'REFERENCE':
         if not token.value in labels:
-            pending_references.update({token.value: (output.tell(), ireg_idx)})
+            pending_references[token.value].append((mem.tell(), ireg_idx))
             for _ in range(2):
-                output.write(instruction['NOP'])
-                output.write(3*register['0'])
-                output.write(' // NOP\n')
+                mem.write(instruction['NOP'])
+                mem.write(3*register['0'])
+                mem.write(' // NOP\n')
                 pc += 1
         else:
             load_value(ireg[ireg_idx], labels[token.value])
     elif token.type == 'OFFSET':
         load_value(ireg[ireg_idx], token.offset)
-        output.write(instruction['ADD'])
-        output.write(2*register[ireg[ireg_idx]])
-        output.write(token.value)
-        output.write(' // ADD\n')
+        mem.write(instruction['ADD'])
+        mem.write(2*register[ireg[ireg_idx]])
+        mem.write(token.value)
+        mem.write(' // ADD\n')
         pc += 1
     if token.type != 'REGISTER':
         token.value = register[ireg[ireg_idx]]
         ireg_idx = (ireg_idx + 1) % len(ireg)
     return True
 
-def load_value(reg, value):
-    global pc
+def binary_string(value):
     if value < 0:
         value += 2**16
     binary = bin(value)[2:]
     if len(binary) > 16:
         parse_error('immediate', 'value exceeds 16-bit maximum')
     upper = (len(binary) > 8)
-    binary = '0'*(16 - len(binary)) + binary
+    return '0'*(16 - len(binary)) + binary, upper
 
-    output.write(instruction['MLO'])
-    output.write(register[reg])
-    output.write(binary[8:])
-    output.write(' // MLO\n')
-    pc += 1
+def load_value(reg, value, increment_pc=True):
+    global pc
+    binary, upper = binary_string(value)
 
-    if upper:
-        output.write(instruction['MHI'])
-        output.write(register[reg])
-        output.write(binary[:8])
-        output.write(' // MHI\n')
+    mem.write(instruction['MLO'])
+    mem.write(register[reg])
+    mem.write(binary[8:])
+    mem.write(' // MLO\n')
+    if increment_pc:
         pc += 1
 
-if __name__ == '__main__':
-    if len(argv) == 1:
-        print(f'{argv[0]}: missing input file')
-        exit(1)
-    if '--debug' in argv[2:]:
-        debug = True
-    if '-o' in argv[2:]:
-        i = argv.index('-o')
-        if (i+1) == len(argv):
-            print(f'{argv[0]}: missing output filename')
-            exit(1)
-        output_name = argv[i+1]
+    if upper:
+        mem.write(instruction['MHI'])
+        mem.write(register[reg])
+        mem.write(binary[:8])
+        mem.write(' // MHI\n')
+        if increment_pc:
+            pc += 1
 
-    with open(output_name, 'w') as output:
-        lexer.input(open(argv[1]).read())
+if __name__ == '__main__':
+    parser = ArgumentParser(
+        prog='dscript',
+        description='Assemble a doomscript file.'
+    )
+    parser.add_argument('-o', '--output', metavar='*.mem', type=str,
+                        default='doom.mem', help='output file name for memory')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='show debugging messages')
+    parser.add_argument('file', type=str, help='input file name')
+
+    args = parser.parse_args()
+
+    with open(Path(args.output), 'w') as mem:
+        lexer.input(open(Path(args.file)).read())
         lex()
-        pending_references.update({'MAIN': (output.tell(), -1)})
+        load_value(ireg[-2], -1)
+        mem.write(instruction['OR'])
+        mem.write(register['bp'])
+        mem.write(register[ireg[-2]])
+        mem.write(register['0'])
+        mem.write(' // OR\n')
+        pending_references['MAIN'].append((mem.tell(), -1))
         for _ in range(2):
-            output.write(instruction['NOP'])
-            output.write(3*register['0'])
-            output.write(' // NOP\n')
-        output.write(instruction['JZE'])
-        output.write(register['pc'])
-        output.write(register[ireg[-1]])
-        output.write(register['0'])
-        output.write(' // JZE\n')
-        pc += 3
+            mem.write(instruction['NOP'])
+            mem.write(3*register['0'])
+            mem.write(' // NOP\n')
+        mem.write(instruction['JZE'])
+        mem.write(register['pc'])
+        mem.write(register[ireg[-1]])
+        mem.write(register['0'])
+        mem.write(' // JZE\n')
+        pc += 4
 
         document()
 
@@ -302,11 +315,41 @@ if __name__ == '__main__':
 
         for label in labels:
             if label in pending_references:
-                pend = pending_references.pop(label)
-                output.seek(pend[0], 0)
-                load_value(ireg[pend[1]], labels[label])
+                pends = pending_references.pop(label)
+                for pend in pends:
+                    mem.seek(pend[0], 0)
+                    load_value(ireg[pend[1]], labels[label], increment_pc=False)
 
-    if pending_references:
-        label = list(pending_references.keys())[0]
-        print(f'{argv[0]}: undefined label `{label}`')
-        exit(1)
+        data_printed = defaultdict(bool)
+        data_addr = defaultdict(lambda: pc)
+        for label in data:
+            if label in pending_references:
+                mem.seek(0, 2)
+                value = data[label]
+                addr = data_addr[label]
+                if isinstance(value, str):
+                    if not data_printed[label]:
+                        for c in value:
+                            mem.write(binary_string(ord(c))[0])
+                            mem.write(f' // {label} ({c})\n')
+                            pc += 1
+                        mem.write(binary_string(0)[0])
+                        mem.write(f' // {label} (\\0)\n')
+                        pc += 1
+                    value = addr
+                    data_printed[label] = True
+                pends = pending_references.pop(label)
+                for pend in pends:
+                    mem.seek(pend[0], 0)
+                    load_value(ireg[pend[1]], value, increment_pc=False)
+
+        if pending_references:
+            label = list(pending_references.keys())[0]
+            print(f'{argv[0]}: undefined label `{label}`')
+            exit(1)
+
+        mem.seek(0, 2)
+        for _ in range(2**16-pc):
+            mem.write(instruction['NOP'])
+            mem.write(3*register['0'])
+            mem.write(' // NOP\n')
