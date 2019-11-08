@@ -1,8 +1,10 @@
 SHELL = /bin/bash
 
+PYTHON = python3
 VERILOG=iverilog
 BIN_DIR=bin
 SRC_DIR=src
+LANG_DIR=lang
 LIB_DIRS=${SRC_DIR}
 TEST_DIR=${SRC_DIR}/test
 
@@ -12,7 +14,6 @@ LIB_DIRS += ${SRC_DIR}/mult
 LIB_DIRS += ${SRC_DIR}/mux
 LIB_DIRS += ${SRC_DIR}/dec
 LIB_DIRS += ${SRC_DIR}/dff
-LIB_DIRS += ${SRC_DIR}/cpu
 
 ADD_TEST=${TEST_DIR}/test_add.v
 SUB_TEST=${TEST_DIR}/test_sub.v
@@ -31,7 +32,7 @@ define compile
   ${VERILOG} $(addprefix -y, ${LIB_DIRS}) -o ${BIN_DIR}/$(notdir $(basename $1))$1
 endef
 
-all: bin add mult mux shift cmp dec div dff alu counter cpu
+all: bin add mult mux shift cmp dec div dff alu counter cpu gcd
 
 add:
 	$(call compile, ${ADD_TEST})
@@ -66,6 +67,9 @@ counter:
 
 cpu:
 	$(call compile, ${CPU_TEST})
+
+gcd:
+	${PYTHON} ${LANG_DIR}/parse.py ${LANG_DIR}/gcd.doom -o ${TEST_DIR}/example.mem
 
 bin:
 	[[ -d ${BIN_DIR} ]] || mkdir ${BIN_DIR}

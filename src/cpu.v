@@ -1,7 +1,7 @@
-module cpu (ins_addr, clk, ins, clear);
+module cpu (pc, clk, ins, clear);
 parameter debug = 0;
 
-output wire [15:0] ins_addr;
+output wire [15:0] pc;
 input wire clk, clear;
 input wire [15:0] ins;
 
@@ -11,16 +11,15 @@ wire [15:0] val_pc, val_0, val_1, val_2, val_3, val_4, val_ax, val_bx, val_cx,
   val_dx, val_ac, val_bp, val_hi, val_ai, val_bi, val_ci;
 wire w_pc, w_0, w_1, w_2, w_3, w_4, w_ax, w_bx, w_cx, w_dx, w_ac, w_bp, w_hi, w_ai,
   w_bi, w_ci;
-wire bus_w_pc, bus_w_0, bus_w_1, bus_w_2, bus_w_3, bus_w_ax,
-  bus_w_bx, bus_w_cx, bus_w_dx, bus_w_ac, bus_w_bp, bus_w_ai,
-  bus_w_bi, bus_w_ci;
-wire [1:0] bus_w_hi, bus_w_4;
+wire bus_w_pc, bus_w_0, bus_w_1, bus_w_2, bus_w_ax, bus_w_bx, bus_w_cx,
+  bus_w_dx, bus_w_ac, bus_w_bp, bus_w_ai, bus_w_bi, bus_w_ci;
+wire [1:0] bus_w_hi, bus_w_3, bus_w_4;
 wire save_pc, save_0, save_1, save_2, save_3, save_4, save_ax,
   save_bx, save_cx, save_dx, save_ac, save_bp, save_hi, save_ai,
   save_bi, save_ci;
 
 wire [3:0] op, dest, src1, src2;
-wire [15:0] out, r0, r1, r2, pc_inc;
+wire [15:0] out, r0, r1, r2;
 
 wire null_signal;
 wire [3:0] bus_dest;
@@ -29,9 +28,15 @@ wire alu_signal, _alu_signal;
 wire [15:0] alu_out;
 wire [2:0] alu_flags;
 
-wire sp_signal, jump_signal, call_signal, sys_signal, jze_null, jnz_null;
+wire sp_signal, jump_signal, call_signal;
+wire jze_null, jnz_null;
 wire zero, _zero;
-wire [15:0] sp_out, bus_4;
+wire [15:0] sp_out;
+
+wire sys_signal, load_signal;
+wire [15:0] load_val;
+
+wire [15:0] bus_3, bus_4, pc_inc;
 
 wire mult_signal;
 wire [15:0] bus_hi, alu_hi;
@@ -50,22 +55,24 @@ initial if (debug) begin
   );
 end
 
+assign sysreg = {val_3, val_2, val_1};
+
 assign op = ins[15:12];
 assign dest = ins[11:8];
 assign src1 = ins[7:4];
 assign src2 = ins[3:0];
 
-assign ins_addr = val_pc;
+assign pc = val_pc;
 
 not (_clk, clk);
 
-counter pc (.out(val_pc), .clk(_clk), .data(out), .write(bus_w_pc));
+counter reg_pc (.out(val_pc), .clk(_clk), .data(out), .write(bus_w_pc));
 
 dff reg_0 [15:0] (.Q(val_0), .data(16'b0), .write(save_0));
 
 dff reg_1 [15:0] (.Q(val_1), .data(out), .write(save_1));
 dff reg_2 [15:0] (.Q(val_2), .data(out), .write(save_2));
-dff reg_3 [15:0] (.Q(val_3), .data(out), .write(save_3));
+dff reg_3 [15:0] (.Q(val_3), .data(bus_3), .write(save_3));
 dff reg_4 [15:0] (.Q(val_4), .data(bus_4), .write(save_4));
 
 dff reg_ax [15:0] (.Q(val_ax), .data(out), .write(save_ax));
@@ -92,13 +99,14 @@ and (save_bp, bus_w_bp, _clk);
 and (save_hi, bus_w_hi[1], _clk);
 and (save_1, bus_w_1, _clk);
 and (save_2, bus_w_2, _clk);
-and (save_3, bus_w_3, _clk);
+and (save_3, bus_w_3[1], _clk);
 and (save_4, bus_w_4[1], _clk);
 and (save_ai, bus_w_ai, _clk);
 and (save_bi, bus_w_bi, _clk);
 and (save_ci, bus_w_ci, _clk);
 
 or (bus_w_hi[1], bus_w_hi[0], mult_signal);
+or (bus_w_3[1], bus_w_3[0], load_signal);
 or (bus_w_4[1], bus_w_4[0], call_signal);
 
 or (bus_w_pc, w_pc, clear);
@@ -112,7 +120,7 @@ or (bus_w_bp, w_bp, clear);
 or (bus_w_hi[0], w_hi, clear);
 or (bus_w_1, w_1, clear);
 or (bus_w_2, w_2, clear);
-or (bus_w_3, w_3, clear);
+or (bus_w_3[0], w_3, clear);
 or (bus_w_4[0], w_4, clear);
 or (bus_w_ai, w_ai, clear);
 or (bus_w_bi, w_bi, clear);
@@ -174,6 +182,7 @@ or (null_signal, sys_signal, jze_null, jnz_null);
 
 mux #(4) dest_mux (bus_dest, dest, 4'b0, null_signal);
 mux hi_mux (bus_hi, out, alu_hi, mult_signal);
+mux reg3_mux (bus_3, out, load_val, load_signal);
 mux reg4_mux (bus_4, out, pc_inc, call_signal);
 mux_4 out_mux (out, {32'b0, alu_out, sp_out}, {clear, alu_signal});
 
@@ -192,6 +201,6 @@ mux_8 sp_mux (
   op[2:0]
 );
 
-halt halt_module (sys_signal, val_1);
+syscall sys_module (load_signal, load_val, sys_signal, {val_3, val_2, val_1});
 
 endmodule

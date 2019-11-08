@@ -21,5 +21,52 @@ MAIN:
   or %1, .A, %0
   or %2, .B, %0
   call .GCD
+  or %bp, $500, %0
+  or %1, $1, %0
+  or %2, %bp, %0
+  syscall # save return value
+
+  add %bp, %bp, $30
+
+  or %1, $1, %0
+  or %2, %bp, %0
+  or %3, $71, %0 # G
+  syscall # save
+  or %2, 1(%bp), %0
+  or %3, $67, %0 # C
+  syscall # save
+  or %2, 2(%bp), %0
+  or %3, $68, %0 # D
+  syscall # save
+  or %2, 3(%bp), %0
+  or %3, $32, %0 # space
+  syscall # save
+  or %2, 4(%bp), %0
+  or %3, $61, %0 # =
+  syscall # save
+  or %2, 5(%bp), %0
+  or %3, $32, %0 # space
+  syscall # save
+  or %2, 6(%bp), %0
+  or %3, %0, %0
+  syscall # save
+
+  or %1, $5, %0
+  or %2, %bp, %0
+  syscall # print string
+
+  or %1, $2, %0
+  or %2, -30(%bp), %0
+  syscall # load return value
+  or %ax, %3, %0
+
+  or %1, $3, %0
+  or %2, %ax, %0
+  syscall # print integer
+
+  or %1, $4, %0
+  or %2, $10, %0 # newline
+  syscall # print character
+
   or %1, %0, %0
-  syscall # Halt
+  syscall # halt
