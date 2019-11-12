@@ -27,13 +27,11 @@ ALU_TEST=${TEST_DIR}/test_alu.v
 COUNTER_TEST=${TEST_DIR}/test_counter.v
 CPU_TEST=${TEST_DIR}/test_cpu.v
 
-MAIN=${SRC_DIR}/main.v
-
 define compile
   ${VERILOG} $(addprefix -y, ${LIB_DIRS}) -o ${BIN_DIR}/$(notdir $(basename $1))$1
 endef
 
-all: bin add mult mux cmp dec div dff alu counter cpu main gcd
+all: bin add mult mux cmp dec div dff alu counter cpu gcd main
 
 add:
 	$(call compile, ${ADD_TEST})
@@ -65,9 +63,6 @@ counter:
 
 cpu:
 	$(call compile, ${CPU_TEST})
-
-main:
-	$(call compile, ${MAIN})
 
 gcd:
 	${DSCRIPT} ${LANG_DIR}/gcd.doom -o ${TEST_DIR}/example.mem

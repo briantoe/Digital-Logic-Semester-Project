@@ -1,0 +1,53 @@
+#!/bin/bash
+
+debug=${DOOM_DEBUG:-"0"}
+main_input=${DOOM_INPUT:-"main.v"}
+main_output=${DOOM_OUTPUT:-"doom"}
+program=${DOOM_PROGRAM:-"doom.mem"}
+
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
+  case $1 in
+    -d | --debug)
+      debug="1"
+      ;;
+    -i | --input)
+      shift
+      main_input=$1
+      ;;
+    -o | --output)
+      shift
+      main_output=$1
+      ;;
+    -p | --program)
+      shift
+      program=$1
+      ;;
+    -h | --help)
+        echo 'usage ./configure [options]'
+        echo 'options:'
+        echo '  -d, --debug             Enable debugging.'
+        echo '  -i, --input             Set name for main module file.'
+        echo '  -o, --output            Set output for compiled main.'
+        echo '  -p, --program           Set input program to execute.'
+        echo '  -h, --help              Show usage.'
+        exit 1
+        ;;
+  esac; shift; done
+if [[ "$1" == "--" ]]; then shift; fi
+
+echo "Generating $main_input..."
+echo "module main ();" > $main_input
+echo >> $main_input
+echo "system #(.debug($debug), .file(\"$program\")) system_module ();" >> $main_input
+echo >> $main_input
+echo "endmodule" >> $main_input
+echo "done."
+
+echo "Generating Makefile..."
+echo "MAIN = $main_input" > Makefile
+echo >> Makefile
+cat Makefile.in >> Makefile
+echo >> Makefile
+echo "main:" >> Makefile
+echo -e "\t\${VERILOG} \$(addprefix -y, \${LIB_DIRS}) -s main -o $main_output \${MAIN}" >> Makefile
+echo "done."
