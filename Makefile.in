@@ -20,7 +20,6 @@ SUB_TEST=${TEST_DIR}/test_sub.v
 MULT_TEST=${TEST_DIR}/test_mult.v
 DEC_TEST=${TEST_DIR}/test_dec.v
 MUX_TEST=${TEST_DIR}/test_mux.v
-SHIFT_TEST=${TEST_DIR}/test_shift.v
 CMP_TEST=${TEST_DIR}/test_cmp.v
 DIV_TEST=${TEST_DIR}/test_div.v
 DFF_TEST=${TEST_DIR}/test_dff.v
@@ -32,7 +31,7 @@ define compile
   ${VERILOG} $(addprefix -y, ${LIB_DIRS}) -o ${BIN_DIR}/$(notdir $(basename $1))$1
 endef
 
-all: bin add mult mux shift cmp dec div dff alu counter cpu gcd
+all: bin add mult mux cmp dec div dff alu counter cpu gcd main
 
 add:
 	$(call compile, ${ADD_TEST})
@@ -46,9 +45,6 @@ dec:
 
 mux:
 	$(call compile, ${MUX_TEST})
-
-shift:
-	$(call compile, ${SHIFT_TEST})
 
 cmp:
 	$(call compile, ${CMP_TEST})

@@ -49,7 +49,6 @@ always @(posedge syscall) begin
     4 : $fwrite(stdout, "%c", sysregs[31:16]);
     5 : begin
       i = 0;
-      $display("%5d, %c", sysregs[31:16], mem[sysregs[31:16]]);
       while (mem[sysregs[31:16]+i] != 0) begin
         $fwrite(stdout, "%c", mem[sysregs[31:16]+i]);
         i = i + 1;

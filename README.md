@@ -83,6 +83,11 @@ add:
 
 * Finally, add the rule you defined to the requirements for `all`.
 
+## Building
+
+To build the project, first run `./configure`, then use `make`. Use
+`./configure -h` for available options.
+
 ## Language
 
 *DoomScript* is a rough assembly language used to generate text files that can
@@ -181,6 +186,7 @@ the `%1` register.
 ### Example
 
 ```
+MSG_PREFIX: "GCD = "
 A: 1071
 B: 462
 
@@ -204,6 +210,20 @@ MAIN:
   or %1, .A, %0
   or %2, .B, %0
   call .GCD
+  or %ax, %3, %0 # store return value
+
+  or %1, $5, %0
+  or %2, .MSG_PREFIX, %0
+  syscall # print string
+
+  or %1, $3, %0
+  or %2, %ax, %0
+  syscall # print integer
+
+  or %1, $4, %0
+  or %2, $10, %0 # newline
+  syscall # print character
+
   or %1, %0, %0
-  syscall # Halt
+  syscall # halt
 ```
