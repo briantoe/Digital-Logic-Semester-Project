@@ -1,9 +1,11 @@
 #!/bin/bash
 
 debug=${DOOM_DEBUG:-"0"}
-main_input=${DOOM_INPUT:-"main.v"}
-main_output=${DOOM_OUTPUT:-"doom"}
+main_input=${DOOM_INPUT:-"src/main.v"}
+main_output=${DOOM_OUTPUT:-"bin/doom"}
 program=${DOOM_PROGRAM:-"doom.mem"}
+width=${DOOM_WIDTH:-"150"}
+height=${DOOM_HEIGHT:-"50"}
 
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
   case $1 in
@@ -18,6 +20,11 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
       shift
       main_output=$1
       ;;
+    -r | --resolution)
+      shift
+      width=${1%x*}
+      height=${1#*x}
+      ;;
     -p | --program)
       shift
       program=$1
@@ -28,6 +35,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
         echo '  -d, --debug             Enable debugging.'
         echo '  -i, --input             Set name for main module file.'
         echo '  -o, --output            Set output for compiled main.'
+        echo '  -r, --resolution        Set the VGA resolution (WIDTHxHEIGHT).'
         echo '  -p, --program           Set input program to execute.'
         echo '  -h, --help              Show usage.'
         exit 1
@@ -38,7 +46,7 @@ if [[ "$1" == "--" ]]; then shift; fi
 echo "Generating $main_input..."
 echo "module main ();" > $main_input
 echo >> $main_input
-echo "system #(.debug($debug), .file(\"$program\")) system_module ();" >> $main_input
+echo "system #(.debug($debug), .program(\"$program\"), .width($width), .height($height)) system_module ();" >> $main_input
 echo >> $main_input
 echo "endmodule" >> $main_input
 echo "done."

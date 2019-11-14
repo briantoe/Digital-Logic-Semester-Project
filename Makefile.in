@@ -3,8 +3,8 @@ SHELL = /bin/bash
 VERILOG=iverilog
 BIN_DIR=bin
 SRC_DIR=src
-LANG_DIR=lang
-DSCRIPT = ${LANG_DIR}/dscript
+SCRIPT_DIR=scripts
+DSCRIPT=./dscript
 LIB_DIRS=${SRC_DIR}
 TEST_DIR=${SRC_DIR}/test
 
@@ -65,7 +65,7 @@ cpu:
 	$(call compile, ${CPU_TEST})
 
 gcd:
-	${DSCRIPT} ${LANG_DIR}/gcd.doom -o ${TEST_DIR}/example.mem
+	${DSCRIPT} ${SCRIPT_DIR}/gcd.doom -o ${TEST_DIR}/example.mem
 
 bin:
 	[[ -d ${BIN_DIR} ]] || mkdir ${BIN_DIR}

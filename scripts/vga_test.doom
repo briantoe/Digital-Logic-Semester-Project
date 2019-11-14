@@ -1,0 +1,99 @@
+TOTAL_FRAMES: 60
+
+HASH: 35
+
+WIDTH: 30
+HEIGHT: 10
+CENTER_X: 15
+CENTER_Y: 5
+
+VGA_PRINT:
+  or %1, $6, %0
+  syscall
+  jze %4, %0
+
+VGA_CLEAR:
+  or %1, $7, %0
+  syscall
+  jze %4, %0
+
+VGA_WRITE:
+  or %1, $8, %0
+  syscall
+  jze %4, %0
+
+SAVE:
+  or %1, $1, %0
+  syscall
+  jze %4, %0
+
+LOAD:
+  or %1, $2, %0
+  syscall
+  jze %4, %0
+
+POSITION:
+  mul %3, %2, .WIDTH
+  add %3, %3, %1
+  jze %4, %0
+
+DRAW:
+  or %2, %bp, %0
+  or %3, %4, %0
+  call .SAVE
+
+  or %2, -1(%bp), %0
+  call .LOAD
+  or %dx, %3, %0
+
+  div %ax, %dx, $2
+  sub %bx, .CENTER_X, %ax
+  add %cx, .CENTER_X, %ax
+
+DRAW_L0:
+  or %1, -1(%bx), %0
+  or %2, .CENTER_Y, %0
+  call .POSITION
+
+  or %2, %3, %0
+  or %3, .HASH, %0
+  call .VGA_WRITE
+
+  xor %ax, %bx, %cx
+  add %bx, %bx, $1
+  jnz .DRAW_L0, %ax
+
+  add %dx, %dx, $1
+
+  xor %ax, %dx, .WIDTH
+  jnz .DRAW_L1, %ax
+
+  or %dx, %0, %0
+
+DRAW_L1:
+  or %2, -1(%bp), %0
+  or %3, %dx, %0
+  call .SAVE
+
+  or %2, %bp, %0
+  call .LOAD
+  jze %3, %0
+
+MAIN:
+  or %2, -1(%bp), %0
+  or %3, %0, %0
+  call .SAVE
+MAIN_L0:
+  xor %dx, %ac, .TOTAL_FRAMES
+  jze .EXIT, %dx
+
+  call .VGA_CLEAR
+  call .DRAW
+  call .VGA_PRINT
+
+  add %ac, %ac, $1
+  jze .MAIN_L0, %0
+
+EXIT:
+  or %1, %0, %0
+  syscall
