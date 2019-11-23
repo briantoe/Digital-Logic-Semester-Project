@@ -31,7 +31,22 @@ initial begin
 end
 
 initial begin
-  $monitor("alu: ins = %4b => out = %4d, flags = %3b, hi = %4d", ins, out, flags, hi);
+  $display("ins | out| flags| hi||add|sub  | mul|div| or|and|not  |xor|cmp");
+  $monitor("%4b|%4d|%6d|%3d||%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d", 
+    ins,
+    out,
+    flags,
+    hi,
+    alu_test.add_module.out,
+    alu_test.sub_module.out,
+    alu_test.mul_module.lo,
+    alu_test.div_module.out,
+    alu_test.bus_or,
+    alu_test.bus_and,
+    alu_test.bus_not,
+    alu_test.bus_xor,
+    alu_test.cmp_conversion.out
+  );
 end
 
 endmodule
