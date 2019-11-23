@@ -1,5 +1,5 @@
 bin/
 __pycache__
-doom.mem
+*.mem
 main.v
 Makefile
