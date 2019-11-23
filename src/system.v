@@ -65,7 +65,11 @@ always @(posedge syscall) begin
         i = i + 1;
       end
     end
-    6 : video_activate <= ~video_activate;
+    6 : begin
+      video_activate <= 1;
+      #5
+      video_activate <= 0;
+    end
     7 : begin
       video_clear <= 1;
       #5
