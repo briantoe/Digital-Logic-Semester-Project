@@ -1,9 +1,12 @@
 SHELL = /bin/bash
 
 VERILOG=iverilog
+PYTHON=python3
 BIN_DIR=bin
 SRC_DIR=src
+MEM_DIR=mem
 SCRIPT_DIR=scripts
+PYTHON_DIR=py
 DSCRIPT=./dscript
 LIB_DIRS=${SRC_DIR}
 TEST_DIR=${SRC_DIR}/test
@@ -31,7 +34,7 @@ define compile
   ${VERILOG} $(addprefix -y, ${LIB_DIRS}) -o ${BIN_DIR}/$(notdir $(basename $1))$1
 endef
 
-all: bin add mult mux cmp dec div dff alu counter cpu gcd main
+all: dir add mult mux cmp dec div dff alu counter cpu gcd trig main
 
 add:
 	$(call compile, ${ADD_TEST})
@@ -65,10 +68,14 @@ cpu:
 	$(call compile, ${CPU_TEST})
 
 gcd:
-	${DSCRIPT} ${SCRIPT_DIR}/gcd.doom -o ${TEST_DIR}/example.mem
+	${DSCRIPT} ${SCRIPT_DIR}/gcd.doom -o ${MEM_DIR}/example.mem
 
-bin:
+trig:
+	${PYTHON} ${PYTHON_DIR}/trig.py ${MEM_DIR}/trig.mem
+
+dir:
 	[[ -d ${BIN_DIR} ]] || mkdir ${BIN_DIR}
+	[[ -d ${MEM_DIR} ]] || mkdir ${MEM_DIR}
 
 clean:
 	rm -r ${BIN_DIR}/

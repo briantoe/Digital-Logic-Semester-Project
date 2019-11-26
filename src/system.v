@@ -1,8 +1,9 @@
 module system ();
-parameter debug = 0, program = "doom.mem", width = 150, height = 50;
+parameter debug = 0, program = "mem/doom.mem", trig_table = "mem/trig.mem", width = 30, height = 10;
 integer i, stdout;
 
 reg [15:0] mem [0:65535];
+reg [15:0] trig [0:719];
 
 wire [15:0] pc;
 wire syscall;
@@ -37,6 +38,7 @@ always @(posedge clk) ins <= mem[pc];
 initial begin
   if (debug) $display("Loading memory...");
   $readmemb(program, mem);
+  $readmemb(trig_table, trig);
   stdout = $fopenw("/dev/stdout");
   load_signal <= 0;
   video_activate <= 0;
@@ -81,6 +83,14 @@ always @(posedge syscall) begin
       video_write <= 1;
       #5
       video_write <= 0;
+    end
+    9 : begin
+      load_signal <= 1;
+      load_data <= trig[2*sysregs[31:16]];
+    end
+    10 : begin
+      load_signal <= 1;
+      load_data <= trig[2*sysregs[31:16]+1];
     end
   endcase
 end

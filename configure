@@ -3,9 +3,10 @@
 debug=${DOOM_DEBUG:-"0"}
 main_input=${DOOM_INPUT:-"src/main.v"}
 main_output=${DOOM_OUTPUT:-"bin/doom"}
-program=${DOOM_PROGRAM:-"doom.mem"}
-width=${DOOM_WIDTH:-"150"}
-height=${DOOM_HEIGHT:-"50"}
+program=${DOOM_PROGRAM:-"mem/doom.mem"}
+trig=${DOOM_TRIG:-"mem/trig.mem"}
+width=${DOOM_WIDTH:-"30"}
+height=${DOOM_HEIGHT:-"10"}
 
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
   case $1 in
@@ -29,6 +30,10 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
       shift
       program=$1
       ;;
+    -t | --trig)
+      shift
+      trig=$1
+      ;;
     -h | --help)
         echo 'usage ./configure [options]'
         echo 'options:'
@@ -37,6 +42,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
         echo '  -o, --output            Set output for compiled main.'
         echo '  -r, --resolution        Set the VGA resolution (WIDTHxHEIGHT).'
         echo '  -p, --program           Set input program to execute.'
+        echo '  -t, --trig              Set input program to execute.'
         echo '  -h, --help              Show usage.'
         exit 1
         ;;
@@ -46,7 +52,7 @@ if [[ "$1" == "--" ]]; then shift; fi
 echo "Generating $main_input..."
 echo "module main ();" > $main_input
 echo >> $main_input
-echo "system #(.debug($debug), .program(\"$program\"), .width($width), .height($height)) system_module ();" >> $main_input
+echo "system #(.debug($debug), .program(\"$program\"), .trig_table(\"$trig\"), .width($width), .height($height)) system_module ();" >> $main_input
 echo >> $main_input
 echo "endmodule" >> $main_input
 echo "done."
