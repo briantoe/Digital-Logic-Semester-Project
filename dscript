@@ -67,11 +67,12 @@ def document():
     global pc
     if not token:
         return False
-    if token.type == 'NEWLINE':
-        lex()
     while token:
         while label():
             pass
+        if token.type == 'NEWLINE':
+            lex()
+            continue
         stmt()
         pc += 1
     return True

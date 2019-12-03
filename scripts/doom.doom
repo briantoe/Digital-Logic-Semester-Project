@@ -1,0 +1,367 @@
+WIDTH: 120
+HEIGHT: 40
+CENTER_X: 60
+CENTER_Y: 20
+
+DATA_OFFSET: 8
+
+SAVE:
+  or %1, $1, %0
+  syscall
+  jze %4, %0
+
+LOAD:
+  or %1, $2, %0
+  syscall
+  jze %4, %0
+
+PRINT:
+  or %1, $3, %0
+  syscall
+  or %1, $4, %0
+  or %2, $10, %0
+  syscall
+  jze %4, %0
+
+VGA_FLUSH:
+  or %1, $6, %0
+  syscall
+  jze %4, %0
+
+VGA_CLEAR:
+  or %1, $7, %0
+  syscall
+  jze %4, %0
+
+VGA_BLANK:
+  or %1, $8, %0
+  or %3, %0, %0
+  syscall
+  jze %4, %0
+
+VGA_BLOCK:
+  or %1, $8, %0
+  or %3, $1, %0
+  syscall
+  jze %4, %0
+
+VGA_VLINE:
+  or %1, $8, %0
+  or %3, $2, %0
+  syscall
+  jze %4, %0
+
+VGA_HLINE:
+  or %1, $8, %0
+  or %3, $3, %0
+  syscall
+  jze %4, %0
+
+VGA_TOP:
+  or %1, $8, %0
+  or %3, $4, %0
+  syscall
+  jze %4, %0
+
+VGA_BOTTOM:
+  or %1, $8, %0
+  or %3, $5, %0
+  syscall
+  jze %4, %0
+
+VGA_NW_CORNER:
+  or %1, $8, %0
+  or %3, $6, %0
+  syscall
+  jze %4, %0
+
+VGA_NE_CORNER:
+  or %1, $8, %0
+  or %3, $7, %0
+  syscall
+  jze %4, %0
+
+VGA_SE_CORNER:
+  or %1, $8, %0
+  or %3, $8, %0
+  syscall
+  jze %4, %0
+
+VGA_SW_CORNER:
+  or %1, $8, %0
+  or %3, $9, %0
+  syscall
+  jze %4, %0
+
+DRAW_COLUMN:
+  or %ax, %1, %0 # x-coordinate
+  or %bx, %2, %0 # column height
+
+  or %2, %bp, %0
+  or %3, %4, %0
+  call .SAVE
+
+  sub %cx, .HEIGHT, %bx
+  div %cx, %cx, $2 # offset from the top of screen
+  mul %cx, %cx, .WIDTH
+  add %2, %cx, %ax # position on screen (store as argument for VGA methods)
+
+  or %ac, %0, %0
+  or %dx, %0, %0
+
+DRAW_COLUMN_LOOP:
+  xor %cx, %ac, %bx # while %ac != height of column
+  jze .DRAW_COLUMN_EXIT, %cx
+  
+  jnz .DRAW_COLUMN_SKIP_TOP, %ac # draw TOP when %ac == 0
+  call .VGA_TOP
+  or %dx, $1, %0
+
+DRAW_COLUMN_SKIP_TOP:
+  add %cx, %ac, $1
+  xor %cx, %cx, %bx
+  jnz .DRAW_COLUMN_SKIP_BOTTOM, %cx # draw BOTTOM when %ac == height - 1
+  call .VGA_BOTTOM
+  xor %dx, %dx, $1 # if both TOP and BOTTOM were drawn, overwrite with VLINE
+
+DRAW_COLUMN_SKIP_BOTTOM:
+  jnz .DRAW_COLUMN_SKIP_VLINE, %dx # check if TOP or BOTTOM were drawn
+  call .VGA_VLINE
+
+DRAW_COLUMN_SKIP_VLINE:
+  or %dx, %0, %0
+  add %ac, %ac, $1
+  add %2, %2, .WIDTH
+  jze .DRAW_COLUMN_LOOP, %0
+
+DRAW_COLUMN_EXIT:
+  or %2, %bp, %0
+  call .LOAD
+  jze %3, %0
+
+DRAW_WALL:
+  or %ax, %1, %0 # x-coordinate
+  or %bx, %2, %0 # height of wall
+
+  or %2, %bp, %0
+  or %3, %4, %0
+  call .SAVE
+
+  sub %cx, .HEIGHT, %bx
+  div %cx, %cx, $2 # offset from the top of screen
+  mul %cx, %cx, .WIDTH
+  add %2, %cx, %ax # position on screen (store as argument for VGA methods)
+
+  call .VGA_HLINE
+  sub %cx, %bx, $1
+  mul %dx, %cx, .WIDTH
+  add %2, %2, %dx
+  call .VGA_HLINE
+
+  or %2, %bp, %0
+  call .LOAD
+  jze %3, %0
+
+DRAW_WALL_UP:
+  or %ax, %1, %0 # x-coordinate
+  or %bx, %2, %0 # height of wall
+
+  or %2, %bp, %0
+  or %3, %4, %0
+  call .SAVE
+
+  sub %cx, .HEIGHT, %bx
+  div %cx, %cx, $2 # offset from the top of screen
+  mul %cx, %cx, .WIDTH
+  add %2, %cx, %ax # position on screen (store as argument for VGA methods)
+
+  call .VGA_NW_CORNER
+  add %2, %2, .WIDTH
+  call .VGA_SE_CORNER
+  sub %cx, %bx, $3
+  mul %dx, %cx, .WIDTH
+  add %2, %2, %dx
+  call .VGA_NE_CORNER
+  add %2, %2, .WIDTH
+  call .VGA_SW_CORNER
+
+  or %2, %bp, %0
+  call .LOAD
+  jze %3, %0
+
+DRAW_WALL_DOWN:
+  or %ax, %1, %0 # x-coordinate
+  or %bx, %2, %0 # height of wall
+
+  or %2, %bp, %0
+  or %3, %4, %0
+  call .SAVE
+
+  sub %cx, .HEIGHT, %bx
+  div %cx, %cx, $2 # offset from the top of screen
+  mul %cx, %cx, .WIDTH
+  add %2, %cx, %ax # position on screen (store as argument for VGA methods)
+
+  call .VGA_NE_CORNER
+  add %2, %2, .WIDTH
+  call .VGA_SW_CORNER
+  sub %cx, %bx, $3
+  mul %dx, %cx, .WIDTH
+  add %2, %2, %dx
+  call .VGA_NW_CORNER
+  add %2, %2, .WIDTH
+  call .VGA_SE_CORNER
+
+  or %2, %bp, %0
+  call .LOAD
+  jze %3, %0
+
+ROUND_EVEN:
+  and %1, %3, $1
+  jze %4, %1
+  add %3, %3, $1
+  jze %4, %0
+
+STORE_LINE:
+  or %2, %bp, %0
+  or %3, %4, %0
+  call .SAVE
+
+  or %2, -4(%bp), %0
+  or %3, %ax, %0
+  call .SAVE
+
+  or %2, -5(%bp), %0
+  or %3, %bx, %0
+  call .SAVE
+
+  or %2, -6(%bp), %0
+  or %3, %cx, %0
+  call .SAVE
+
+  or %2, -7(%bp), %0
+  or %3, %dx, %0
+  call .SAVE
+
+  or %2, %bp, %0
+  call .LOAD
+  jze %3, %0
+
+INTERPOLATE:
+  or %2, %bp, %0
+  or %3, %4, %0
+  call .SAVE
+
+  or %2, -1(%bp), %0
+  or %3, %ac, %0
+  call .SAVE
+
+  or %2, -4(%bp), %0
+  call .LOAD
+  or %ax, %3, %0 # x0
+
+  or %2, -5(%bp), %0
+  call .LOAD
+  or %bx, %3, %0 # x1
+
+  or %2, -6(%bp), %0
+  call .LOAD
+  or %cx, %3, %0 # y0
+
+  or %2, -7(%bp), %0
+  call .LOAD
+  or %dx, %3, %0 # y1
+
+  sub %ax, %ac, %ax # x - x0
+  sub %bx, %bx, %ac # x1 - x
+  mul %cx, %cx, %bx # y0*(x1 - x)
+  mul %dx, %dx, %ax # y1*(x - x0)
+  or %2, %dx, %0
+  call .PRINT
+  call .EXIT
+  add %cx, %cx, %dx # y0*(x1 - x) + y1*(x - x0)
+  add %ax, %ax, %bx # x1 - x0
+  div %ax, %cx, %ax # [y0*(x1 - x) + y1*(x - x0)]/(x1 - x0)
+
+  or %2, %bp, %0
+  call .LOAD
+  or %4, %3, %0
+  or %3, %ax, %0
+  jze %4, %0
+
+MAIN:
+  sub %ax, .CENTER_X, $10
+  add %bx, .CENTER_X, $10
+  or %cx, $10, %0
+  or %dx, $20, %0
+  call .STORE_LINE
+
+MAIN_DRAW_LOOP:
+  call .VGA_CLEAR
+
+  or %2, -4(%bp), %0
+  call .LOAD
+  or %ac, %3, %0
+
+  or %2, -6(%bp), %0
+  call .LOAD
+  or %2, -1(%bp), %0
+  call .SAVE
+  or %1, %ac, %0
+  or %2, %3, %0
+  call .DRAW_COLUMN
+
+MAIN_WALL_LOOP:
+  add %ac, %ac, $1
+  or %2, -5(%bp), %0
+  call .LOAD
+  xor %ax, %ac, %3
+  jze .MAIN_WALL_LOOP_EXIT, %ax
+
+  call .INTERPOLATE
+  call .ROUND_EVEN
+  or %ax, %3, %0
+
+  or %2, -1(%bp), %0
+  call .LOAD
+  cmp %bx, %ax, %3
+
+  or %1, %ac, %0
+  or %2, %ax, %0
+
+  xor %cx, %bx, $1
+  jze .MAIN_L0, %0
+
+  xor %cx, %bx, -$1
+  jze .MAIN_L1, %cx
+  
+  call .DRAW_WALL
+  jze .MAIN_L2, %0
+
+MAIN_L0:
+  call .DRAW_WALL_UP
+  jze .MAIN_L2, %0
+
+MAIN_L1:
+  call .DRAW_WALL_DOWN
+
+MAIN_L2:
+  jze .MAIN_WALL_LOOP, %0
+
+MAIN_WALL_LOOP_EXIT:
+  or %2, -5(%bp), %0
+  call .LOAD
+  or %ax, %3, %0
+  or %2, -7(%bp), %0
+  call .LOAD
+  or %1, %ax, %0
+  or %2, %3, %0
+  call .DRAW_COLUMN
+
+  call .VGA_FLUSH
+
+  jze .MAIN_DRAW_LOOP, %0
+
+EXIT:
+  or %1, %0, %0
+  syscall

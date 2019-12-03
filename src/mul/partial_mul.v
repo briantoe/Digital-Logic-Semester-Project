@@ -1,4 +1,4 @@
-module partial_mult (out, carries_out, A, B, prev, carries_in);
+module partial_mul (out, carries_out, A, B, prev, carries_in);
 
 output wire [15:0] out, carries_out;
 input wire [15:0] A, prev, carries_in;

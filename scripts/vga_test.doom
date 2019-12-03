@@ -1,11 +1,11 @@
 TOTAL_FRAMES: 60
 
-HASH: 35
+BLOCK: 1
 
-WIDTH: 30
-HEIGHT: 10
-CENTER_X: 15
-CENTER_Y: 5
+WIDTH: 120
+HEIGHT: 40
+CENTER_X: 60
+CENTER_Y: 20
 
 VGA_PRINT:
   or %1, $6, %0
@@ -56,7 +56,7 @@ DRAW_L0:
   call .POSITION
 
   or %2, %3, %0
-  or %3, .HASH, %0
+  or %3, .BLOCK, %0
   call .VGA_WRITE
 
   xor %ax, %bx, %cx

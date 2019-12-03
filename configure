@@ -5,8 +5,8 @@ main_input=${DOOM_INPUT:-"src/main.v"}
 main_output=${DOOM_OUTPUT:-"bin/doom"}
 program=${DOOM_PROGRAM:-"mem/doom.mem"}
 trig=${DOOM_TRIG:-"mem/trig.mem"}
-width=${DOOM_WIDTH:-"30"}
-height=${DOOM_HEIGHT:-"10"}
+width=${DOOM_WIDTH:-"120"}
+height=${DOOM_HEIGHT:-"40"}
 
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
   case $1 in

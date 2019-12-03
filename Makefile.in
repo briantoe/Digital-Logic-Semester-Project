@@ -13,14 +13,14 @@ TEST_DIR=${SRC_DIR}/test
 
 LIB_DIRS += ${SRC_DIR}/cmp
 LIB_DIRS += ${SRC_DIR}/add
-LIB_DIRS += ${SRC_DIR}/mult
+LIB_DIRS += ${SRC_DIR}/mul
 LIB_DIRS += ${SRC_DIR}/mux
 LIB_DIRS += ${SRC_DIR}/dec
 LIB_DIRS += ${SRC_DIR}/dff
 
 ADD_TEST=${TEST_DIR}/test_add.v
 SUB_TEST=${TEST_DIR}/test_sub.v
-MULT_TEST=${TEST_DIR}/test_mult.v
+MULT_TEST=${TEST_DIR}/test_mul.v
 DEC_TEST=${TEST_DIR}/test_dec.v
 MUX_TEST=${TEST_DIR}/test_mux.v
 CMP_TEST=${TEST_DIR}/test_cmp.v
@@ -34,13 +34,13 @@ define compile
   ${VERILOG} $(addprefix -y, ${LIB_DIRS}) -o ${BIN_DIR}/$(notdir $(basename $1))$1
 endef
 
-all: dir add mult mux cmp dec div dff alu counter cpu gcd trig main
+all: dir add mul mux cmp dec div dff alu counter cpu main trig gcd doom
 
 add:
 	$(call compile, ${ADD_TEST})
 	$(call compile, ${SUB_TEST})
 
-mult:
+mul:
 	$(call compile, ${MULT_TEST})
 
 dec:
@@ -67,11 +67,14 @@ counter:
 cpu:
 	$(call compile, ${CPU_TEST})
 
+trig:
+	${PYTHON} ${PYTHON_DIR}/trig.py ${MEM_DIR}/trig.mem
+
 gcd:
 	${DSCRIPT} ${SCRIPT_DIR}/gcd.doom -o ${MEM_DIR}/example.mem
 
-trig:
-	${PYTHON} ${PYTHON_DIR}/trig.py ${MEM_DIR}/trig.mem
+doom:
+	${DSCRIPT} ${SCRIPT_DIR}/doom.doom -o ${MEM_DIR}/doom.mem
 
 dir:
 	[[ -d ${BIN_DIR} ]] || mkdir ${BIN_DIR}

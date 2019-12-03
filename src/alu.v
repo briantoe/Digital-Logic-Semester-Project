@@ -1,6 +1,6 @@
-module alu (out, flags, hi, A, B, ins);
+module alu (out, flags, A, B, ins);
 
-output wire [15:0] out, hi;
+output wire [15:0] out;
 output wire [2:0] flags;
 input wire [15:0] A, B;
 input wire [3:0] ins;
@@ -16,7 +16,7 @@ add add_module (.out(bus_add), .carry_out(bus_carry[0]), .overflow(bus_overflow[
                 .A(A), .B(B), .carry_in(1'b0));
 add sub_module (.out(bus_sub), .carry_out(bus_carry[1]), .overflow(bus_overflow[1]),
                 .A(A), .B(B), .carry_in(1'b1));
-mult mul_module (.hi(hi), .lo(bus_lo), .A(A), .B(B));
+mul mul_module (.lo(bus_lo), .A(A), .B(B));
 div div_module (.out(bus_div), .error(bus_div_flag), .dividend(A), .divisor(B));
 cmp cmp_module (.gt(bus_gt), .eq(bus_eq), .lt(bus_lt), .A(A), .B(B), .sign(1'b1));
 
