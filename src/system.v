@@ -62,7 +62,7 @@ always @(posedge syscall) begin
     3 : begin
       j = sysregs[31:16];
       if (j >= 2**15) j = j - 2**16;
-      $fwrite(stdout, "%0d", j);
+      $fwrite(stdout, "%0d\n", j);
     end
     4 : $fwrite(stdout, "%c", sysregs[31:16]);
     5 : begin
