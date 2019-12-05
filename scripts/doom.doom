@@ -136,7 +136,7 @@ DRAW_COLUMN_EXIT:
   call .LOAD
   jze %3, %0
 
-DRAW_WALL:
+DRAW_WALL_FLAT:
   or %ax, %1, %0 # x-coordinate
   or %bx, %2, %0 # height of wall
 
@@ -194,6 +194,7 @@ DRAW_WALL_DOWN:
   or %3, %4, %0
   call .SAVE
 
+  add %bx, %bx, $2
   sub %cx, .HEIGHT, %bx
   div %cx, %cx, $2 # offset from the top of screen
   mul %cx, %cx, .WIDTH
@@ -210,6 +211,91 @@ DRAW_WALL_DOWN:
   call .VGA_SE_CORNER
 
   or %2, %bp, %0
+  call .LOAD
+  jze %3, %0
+
+DRAW_WALL:
+  or %2, -1(%bp), %0
+  or %3, %4, %0
+  call .SAVE
+
+  or %2, -4(%bp), %0
+  call .LOAD
+  or %ac, %3, %0
+
+  or %2, -6(%bp), %0
+  call .LOAD
+  call .ROUND_EVEN
+  or %2, -2(%bp), %0
+  call .SAVE
+  or %1, %ac, %0
+  or %2, %3, %0
+  call .DRAW_COLUMN
+
+DRAW_WALL_LOOP:
+  add %ac, %ac, $1
+  or %2, -5(%bp), %0
+  call .LOAD
+  xor %ax, %ac, %3
+  jze .DRAW_WALL_LOOP_EXIT, %ax
+
+  call .INTERPOLATE
+  call .ROUND_EVEN
+  or %ax, %3, %0
+
+  or %2, -2(%bp), %0
+  call .LOAD
+  cmp %bx, %ax, %3
+  or %3, %ax, %0
+  call .SAVE
+
+  or %1, %ac, %0
+  or %2, %ax, %0
+
+  xor %cx, %bx, $1
+  jze .DRAW_WALL_L0, %cx
+
+  xor %cx, %bx, -$1
+  jze .DRAW_WALL_L1, %cx
+  
+  call .DRAW_WALL_FLAT
+  jze .DRAW_WALL_L2, %0
+
+DRAW_WALL_L0:
+  call .DRAW_WALL_UP
+  jze .DRAW_WALL_L2, %0
+
+DRAW_WALL_L1:
+  call .DRAW_WALL_DOWN
+
+DRAW_WALL_L2:
+  jze .DRAW_WALL_LOOP, %0
+
+DRAW_WALL_LOOP_EXIT:
+  or %2, -2(%bp), %0
+  call .LOAD
+  or %ax, %3, %0
+  or %2, -7(%bp), %0
+  call .LOAD
+  or %bx, %3, %0
+  cmp %cx, %ax, %bx
+  xor %cx, %cx, $1
+  jnz .DRAW_WALL_FIX_SKIP, %cx
+
+  sub %1, %ac, $1
+  sub %2, %ax, $2
+  call .DRAW_WALL_DOWN
+
+  or %2, -7(%bp), %0
+  call .LOAD
+  or %bx, %3, %0
+
+DRAW_WALL_FIX_SKIP:
+  or %1, %ac, %0
+  or %2, %bx, %0
+  call .DRAW_COLUMN
+
+  or %2, -1(%bp), %0
   call .LOAD
   jze %3, %0
 
@@ -279,79 +365,39 @@ INTERPOLATE:
   jze %4, %0
 
 MAIN:
-  sub %ax, .CENTER_X, $10
-  add %bx, .CENTER_X, $10
+  sub %ax, .CENTER_X, $12
+  add %bx, .CENTER_X, $12
   or %cx, $10, %0
-  or %dx, $20, %0
+  or %dx, $10, %0
   call .STORE_LINE
 
-MAIN_DRAW_LOOP:
+  sub %ax, .CENTER_X, $32
+  sub %bx, .CENTER_X, $12
+  or %cx, $20, %0
+  or %dx, $10, %0
+  sub %bp, %bp, .DATA_OFFSET
+  call .STORE_LINE
+
+  add %ax, .CENTER_X, $12
+  add %bx, .CENTER_X, $32
+  or %cx, $10, %0
+  or %dx, $20, %0
+  sub %bp, %bp, .DATA_OFFSET
+  call .STORE_LINE
+
+MAIN_LOOP:
   call .VGA_CLEAR
 
-  or %2, -4(%bp), %0
-  call .LOAD
-  or %ac, %3, %0
-
-  or %2, -6(%bp), %0
-  call .LOAD
-  or %2, -1(%bp), %0
-  call .SAVE
-  or %1, %ac, %0
-  or %2, %3, %0
-  call .DRAW_COLUMN
-
-MAIN_WALL_LOOP:
-  add %ac, %ac, $1
-  or %2, -5(%bp), %0
-  call .LOAD
-  xor %ax, %ac, %3
-  jze .MAIN_WALL_LOOP_EXIT, %ax
-
-  call .INTERPOLATE
-  call .ROUND_EVEN
-  or %ax, %3, %0
-
-  or %2, -1(%bp), %0
-  call .LOAD
-  cmp %bx, %ax, %3
-  or %3, %ax, %0
-  call .SAVE
-  
-  or %1, %ac, %0
-  or %2, %ax, %0
-
-  xor %cx, %bx, $1
-  jze .MAIN_L0, %cx
-
-  xor %cx, %bx, -$1
-  jze .MAIN_L1, %cx
-  
   call .DRAW_WALL
-  jze .MAIN_L2, %0
-
-MAIN_L0:
-  call .DRAW_WALL_UP
-  jze .MAIN_L2, %0
-
-MAIN_L1:
-  call .DRAW_WALL_DOWN
-
-MAIN_L2:
-  jze .MAIN_WALL_LOOP, %0
-
-MAIN_WALL_LOOP_EXIT:
-  or %2, -5(%bp), %0
-  call .LOAD
-  or %ax, %3, %0
-  or %2, -7(%bp), %0
-  call .LOAD
-  or %1, %ax, %0
-  or %2, %3, %0
-  call .DRAW_COLUMN
+  add %bp, %bp, .DATA_OFFSET
+  call .DRAW_WALL
+  add %bp, %bp, .DATA_OFFSET
+  call .DRAW_WALL
+  mul %ax, $2, .DATA_OFFSET
+  sub %bp, %bp, %ax
 
   call .VGA_FLUSH
-
-  jze .MAIN_DRAW_LOOP, %0
+  jze .MAIN_LOOP, %0
 
 EXIT:
   or %1, %0, %0
