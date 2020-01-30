@@ -71,7 +71,7 @@ trig:
 	${PYTHON} ${PYTHON_DIR}/trig.py ${MEM_DIR}/trig.mem
 
 gcd:
-	${DSCRIPT} ${SCRIPT_DIR}/gcd.doom -o ${MEM_DIR}/example.mem
+	${DSCRIPT} ${SCRIPT_DIR}/gcd.doom -o ${MEM_DIR}/gcd.mem
 
 doom:
 	${DSCRIPT} ${SCRIPT_DIR}/doom.doom -o ${MEM_DIR}/doom.mem

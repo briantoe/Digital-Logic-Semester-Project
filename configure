@@ -38,11 +38,11 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
         echo 'usage ./configure [options]'
         echo 'options:'
         echo '  -d, --debug             Enable debugging.'
-        echo '  -i, --input             Set name for main module file.'
-        echo '  -o, --output            Set output for compiled main.'
+        echo '  -p, --program           Specify the .mem file of the program to execute.'
+        echo '  -t, --trig              Specify the .mem file for the trig table.'
         echo '  -r, --resolution        Set the VGA resolution (WIDTHxHEIGHT).'
-        echo '  -p, --program           Set input program to execute.'
-        echo '  -t, --trig              Set input program to execute.'
+        echo '  -i, --input             Set the name for main module file.'
+        echo '  -o, --output            Set the filename for the compiled executable.'
         echo '  -h, --help              Show usage.'
         exit 1
         ;;

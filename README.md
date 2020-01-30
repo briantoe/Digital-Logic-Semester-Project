@@ -124,9 +124,10 @@ The available instruction set is as follows:
 All instructions except for `syscall` take at least one argument. For
 instructions that take more than one, the first argument almost always
 identifies a destination for the result of an operation (the exception being
-`jnz`, `jze`, and `call` where the first argument identifies the address to
-jump to). Therefore, a call like `mov %bx %ax` will store the value in register
-`%bx` in register `%ax`.
+`jnz`, `jze`, and `call` where the first argument identifies the
+address to jump to). Therefore, a call like `not %bx %ax` will perform a
+logical-not operation on the value in register `%ax` and store the result into
+register `%bx`.
 
 System calls are essentially the way in which the assembly will call anything
 that we want to implement using behavioral verilog modules.  These include
