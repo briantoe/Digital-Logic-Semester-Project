@@ -1,87 +1,28 @@
 # doom.v
 
-## Style
+## About
 
-### Files
+This repository represents the glorious failed attempt to run a DOOM-clone
+using purely structural iVerilog.
 
-* Source files go in `/src`.
+In essence, the goal of the project was to use structural VHDL in order to
+design a fully programmable, 16-bit CPU and VGA that could be used to render
+text-based pseudo-3D graphics to a terminal (imagine the original Wolfenstein
+on a graphing calculator).
 
-* All important modules should have a test module in `/src/test`.
+The CPU and VGA were both successfully implemented; and a rough, but
+sufficient, assembly language was designed to compile programs as text-files
+containing the binary instructions that iVerilog could read into an array then
+feed to the CPU for execution. All of the modules that perform meaningful
+computation are indeed purely structural as well. The only behavioural
+components are those that handle things such as I/O and memory.
 
-* Each module should belong to a single file.
-
-* The file name should be the same as the module name.
-
-* Modules that are built from smaller modules should be collected in its own
-directory (such as the modules in `/src/add`).
-
-### Naming
-
-* File names, module names, and unit names should use `snake_case` with lower
-case lettering.
-
-* Names should be short but intuitive.
-
-* Files for test modules should start with `test_` followed by the module being
-tested.
-
-### Code
-
-* Modules that operate asynchronously should not use registers.
-
-* Outputs should come before inputs in module ports. The clock should always
-come first when needed.
-
-* Try to stick to using the gate modules `and, or, xor, etc.`, rather than
-behavioral operators.
-
-* Parameters should be defined in all caps.
-
-* Test modules should use `$monitor` to output results, and the output should
-be prefaced with the name of the module being tested followed by a colon (such
-as `add: ...`).
-
-* Ports for a module should not have their type declared in the module
-declaration line. Instead, their type declaration should follow immediately
-after.
-
-```verilog
-module name (clk, out, in);
-input clk;
-
-output out;
-input in;
-```
-
-### Formatting
-
-* Avoid any trailing whitespace at the end of lines.
-* Make sure your files use Unix style newlines.
-* Use two spaces for tabs.
-
-### Makefile
-
-* Modules that are within their own directory need to be added to the
-`LIB_DIRS` variable:
-
-```
-LIB_DIRS += ${SRC_DIR}/<your module directory>
-```
-
-* The test module needs to be defined as its own variable:
-
-```
-ADD_TEST = ${TEST_DIR}/test_add.v
-```
-
-* A build rule needs to be defined for your module:
-
-```
-add:
-    $(call compile, ${ADD_TEST})
-```
-
-* Finally, add the rule you defined to the requirements for `all`.
+In theory, this project as it is actually *could* render pseudo-3D graphics,
+but unfortunately, the performance provided by iVerilog proved to be far too
+poor to get any meaningful results. If you're interested in trying it out,
+be prepared for 0.006 frames per second rendering times. Otherwise, the
+example program implementing Euclid's algorithm (see below) has far more
+bearable performance, and with debugging on you can see the CPU in action.
 
 ## Building
 
@@ -91,15 +32,15 @@ To build the project, first run `./configure`, then use `make`. Use
 ## Language
 
 *DoomScript* is a rough assembly language used to generate text files that can
-be used to program the verilog ALU.
+be used to program the verilog CPU.
 
 The Python used to parse the language requires
 [PLY](https://www.dabeaz.com/ply/ply.html) to run.  You can install it using
 `pip`.
 
-To compile your script, use `lang/parse.py`:
+To compile your script, use `dscript`:
 ```bash
-$ python parse.py example.doom
+$ ./dscript example.doom
 ```
 
 ### Syntax
@@ -108,7 +49,7 @@ The syntax for *DoomScript* follows a format similar to MIPS but with a naming
 convention more along the lines of x86 assembly. Source files are made up of
 instruction statements that follow the grammatical rule:
 ```
-<instruction> <arg 1>, <arg 2>, <arg 2>
+<instruction> <arg 1>, <arg 2>, <arg 3>
 ```
 Where an argument can either be a register, a literal, or sometimes a
 reference.
@@ -142,16 +83,24 @@ will require two.
 
 ### Labels and References
 
-References are special kinds of literal values that represent a location in the
-program's execution.  They are prefixed with `.` and require an associated
-label in order to function. A label is defined by `<identifier>:` on a single
-line and marks that location in the instruction list. References are used for
-jump calls and function calls.
+Labels are markers in the assembly that the assembler uses to store static
+data.  Most often this data represents an address to an instruction, but they
+can also represent ordinary 16-bit integers and string literals.
+
+References, on the other hand, are the invocation of a label within the
+argument list of an assembly instruction.
+
+To define a label, the syntax is as follows:
+```
+<identifier>: [integer | string]
+```
+If neither an integer or a string follow the colon, the label is assumed to
+represent an instruction address.
+
+To refer to a label using a reference, the prefix `.` is used followed by
+the identifier of the label to be referenced.
 
 The label `MAIN` is required to denote the starting point of the program.
-
-Additionally, if a number is placed following the colon of a label declaration,
-then the label will represent that number rather than the program counter.
 
 ### Instructions
 
@@ -172,10 +121,12 @@ The available instruction set is as follows:
 * `call`: Jump to a label. Setting `%4` to the appropriate return address.
 * `syscall`: System call.
 
-Instructions all take at least one argument. For instructions that take more
-than one, the first argument almost always identifies a destination for the
-result of an operation (the exception being `jnz` and `sys`). Therefore, a call
-like `mov %bx %ax` will store the value in register `%bx` in register `%ax`.
+All instructions except for `syscall` take at least one argument. For
+instructions that take more than one, the first argument almost always
+identifies a destination for the result of an operation (the exception being
+`jnz`, `jze`, and `call` where the first argument identifies the address to
+jump to). Therefore, a call like `mov %bx %ax` will store the value in register
+`%bx` in register `%ax`.
 
 System calls are essentially the way in which the assembly will call anything
 that we want to implement using behavioral verilog modules.  These include
@@ -185,45 +136,48 @@ the `%1` register.
 
 ### Example
 
+Following is an example program that implements Euclid's algorithm for finding
+the greatest common denominator (GCD) of two integers.
+
 ```
 MSG_PREFIX: "GCD = "
 A: 1071
 B: 462
 
 GCD:
-  or %ax, %1, %0
-  or %bx, %2, %0
+    or %ax, %1, %0
+    or %bx, %2, %0
 L0:
-  cmp %cx, %ax, %bx
-  xor %dx, %cx, -$1
-  jnz .L1, %dx
-  or %1, %bx, %0
-  or %2, %ax, %0
-  jze .GCD, %0 # recurse when %ax < %bx
+    cmp %cx, %ax, %bx
+    xor %dx, %cx, -$1
+    jnz .L1, %dx
+    or %1, %bx, %0
+    or %2, %ax, %0
+    jze .GCD, %0 # recurse when %ax < %bx
 L1:
-  sub %ax, %ax, %bx
-  jnz .L0, %ax
-  or %3, %bx, %0
-  jze %4, %0 # return %bx if %ax == 0
+    sub %ax, %ax, %bx
+    jnz .L0, %ax
+    or %3, %bx, %0
+    jze %4, %0 # return %bx if %ax == 0
 
 MAIN:
-  or %1, .A, %0
-  or %2, .B, %0
-  call .GCD
-  or %ax, %3, %0 # store return value
+    or %1, .A, %0
+    or %2, .B, %0
+    call .GCD
+    or %ax, %3, %0 # store return value
 
-  or %1, $5, %0
-  or %2, .MSG_PREFIX, %0
-  syscall # print string
+    or %1, $5, %0
+    or %2, .MSG_PREFIX, %0
+    syscall # print string
 
-  or %1, $3, %0
-  or %2, %ax, %0
-  syscall # print integer
+    or %1, $3, %0
+    or %2, %ax, %0
+    syscall # print integer
 
-  or %1, $4, %0
-  or %2, $10, %0 # newline
-  syscall # print character
+    or %1, $4, %0
+    or %2, $10, %0 # newline
+    syscall # print character
 
-  or %1, %0, %0
-  syscall # halt
+    or %1, %0, %0
+    syscall # halt
 ```
