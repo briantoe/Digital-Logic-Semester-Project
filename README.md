@@ -13,9 +13,9 @@ on a graphing calculator).
 The CPU and VGA were both successfully implemented; and a rough, but
 sufficient, assembly language was designed to compile programs as text-files
 containing the binary instructions that iVerilog could read into an array then
-feed to the CPU for execution. All of the modules that perform meaningful
-computation are indeed purely structural as well. The only behavioural
-components are those that handle things such as I/O and memory.
+feed to the CPU for execution. Most of the modules that perform meaningful
+computation (except division) are indeed purely structural as well. The only
+behavioural components are those that handle things such as I/O and memory.
 
 In theory, this project as it is actually *could* render pseudo-3D graphics,
 but unfortunately, the performance provided by iVerilog proved to be far too
